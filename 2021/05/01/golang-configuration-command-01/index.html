@@ -1,0 +1,256 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="TAYNPG"><meta name="copyright" content="TAYNPG"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Go的配置和工具-01 | 拐几个弯</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="icon" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"example.com","root":"/","title":"土豆呀土豆","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><meta name="description" content="Go语言的工作环境、变量说明、工程工具介绍。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go的配置和工具-01">
+<meta property="og:url" content="http://example.com/2021/05/01/golang-configuration-command-01/index.html">
+<meta property="og:site_name" content="拐几个弯">
+<meta property="og:description" content="Go语言的工作环境、变量说明、工程工具介绍。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-01T12:15:58.000Z">
+<meta property="article:modified_time" content="2021-05-10T12:32:56.174Z">
+<meta property="article:author" content="TAYNPG">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="ini">
+<meta name="twitter:card" content="summary"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="TAYNPG"><img width="96" loading="lazy" src="/favicon.ico" alt="TAYNPG"></a><div class="site-author-name"><a href="/about/">TAYNPG</a></div><span class="site-name">拐几个弯</span><sub class="site-subtitle">RECORD SOMETING</sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://blog.csdn.net/Taynpg" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Go%E7%8E%AF%E5%A2%83"><span class="toc-number">1.</span> <span class="toc-text">Go环境</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#GOPATH"><span class="toc-number">1.1.</span> <span class="toc-text">GOPATH</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GOROOT"><span class="toc-number">1.2.</span> <span class="toc-text">GOROOT</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GO111MODULE"><span class="toc-number">1.3.</span> <span class="toc-text">GO111MODULE</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GOPROXY"><span class="toc-number">1.4.</span> <span class="toc-text">GOPROXY</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Go%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">Go的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A7%E8%A1%8CGo%E7%A8%8B%E5%BA%8F"><span class="toc-number">2.1.</span> <span class="toc-text">执行Go程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE"><span class="toc-number">2.2.</span> <span class="toc-text">模块项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">2.3.</span> <span class="toc-text">常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#go-build"><span class="toc-number">2.3.1.</span> <span class="toc-text">go build</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-clean"><span class="toc-number">2.3.2.</span> <span class="toc-text">go clean</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-run"><span class="toc-number">2.3.3.</span> <span class="toc-text">go run</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-fmt"><span class="toc-number">2.3.4.</span> <span class="toc-text">go fmt</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-install"><span class="toc-number">2.3.5.</span> <span class="toc-text">go install</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-get"><span class="toc-number">2.3.6.</span> <span class="toc-text">go get</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-test"><span class="toc-number">2.3.7.</span> <span class="toc-text">go test</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#package"><span class="toc-number">2.4.</span> <span class="toc-text">package</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="http://example.com/2021/05/01/golang-configuration-command-01/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="TAYNPG"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="拐几个弯"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Go的配置和工具-01</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-01 20:15:58" itemprop="dateCreated datePublished" datetime="2021-05-01T20:15:58+08:00">2021-05-01</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2021-05-10 20:32:56" itemprop="dateModified" datetime="2021-05-10T20:32:56+08:00">2021-05-10</time></div><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/Go%E8%AF%AD%E8%A8%80/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">Go语言</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/golang/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">golang</span></a><a class="tag-item" href="/tags/ini/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">ini</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h1 id="Go环境"><a href="#Go环境" class="headerlink" title="Go环境"></a>Go环境</h1><h2 id="GOPATH"><a href="#GOPATH" class="headerlink" title="GOPATH"></a>GOPATH</h2><p>在指定GOPATH 工作目录，代码总是会保存在 $GOPATH/src 下。在工程经过 <code>go build</code>、<code>go install</code> 或 <code>go get</code> 等指令后，会将产生的二进制可执行文件放在 $GOPATH/bin 目录下，生成的中间缓存文件会被保存在 $GOPATH/pkg 下。</p>
+<span id="more"></span>
+
+<p>如果需要将整个源码添加到版本管理工具（Version Control System，VCS）中时，只需要添加 $GOPATH/src 目录的源码即可。<code>bin</code> 和 <code>pkg</code> 目录的内容都可以由 <code>src</code> 目录生成，该目录下往往要有3个子目录：<code>src</code>，<code>bin</code>，<code>pkg</code>。</p>
+<blockquote>
+<p>src —- 里面每一个子目录，就是一个包。包内是Go的源码文件</p>
+<p>pkg —- 编译后生成的，包的目标文件</p>
+<p>bin —- 生成的可执行文件</p>
+</blockquote>
+<h2 id="GOROOT"><a href="#GOROOT" class="headerlink" title="GOROOT"></a>GOROOT</h2><p>Go语言的安装的根目录。</p>
+<h2 id="GO111MODULE"><a href="#GO111MODULE" class="headerlink" title="GO111MODULE"></a>GO111MODULE</h2><p>用环境变量 <code>GO111MODULE</code> 开启或关闭模块支持，它有三个可选值：<code>off</code>、<code>on</code>、<code>auto</code>，默认值是 <code>auto</code>。</p>
+<ul>
+<li><code>GO111MODULE=off</code> 无模块支持，go 会从 GOPATH 和 vendor 文件夹寻找包。</li>
+<li><code>GO111MODULE=on</code> 模块支持，go 会忽略 GOPATH 和 vendor 文件夹，只根据 <code>go.mod</code> 下载依赖。</li>
+<li><code>GO111MODULE=auto</code> 在 <code>$GOPATH/src</code> 外面且根目录有 <code>go.mod</code> 文件时，开启模块支持。</li>
+</ul>
+<p>在使用模块的时候，<code>GOPATH</code> 是无意义的，不过它还是会把下载的依赖储存在 <code>$GOPATH/src/mod</code> 中，也会把 <code>go install</code> 的结果放在 <code>$GOPATH/bin</code> 中。</p>
+<h2 id="GOPROXY"><a href="#GOPROXY" class="headerlink" title="GOPROXY"></a>GOPROXY</h2><p>GOPROXY = <code>https://goproxy.cn,direct</code></p>
+<p>Go语言安装模块的国内源（国内代理）。</p>
+<h1 id="Go的使用"><a href="#Go的使用" class="headerlink" title="Go的使用"></a>Go的使用</h1><h2 id="执行Go程序"><a href="#执行Go程序" class="headerlink" title="执行Go程序"></a>执行Go程序</h2><p>方式一：使用<code>go run</code>命令。</p>
+<p>方式二：使用<code>go build</code>命令生成可执行文件。</p>
+<p>方式三：编译并安装，即使用<code>go install</code>命令。</p>
+<h2 id="模块项目"><a href="#模块项目" class="headerlink" title="模块项目"></a>模块项目</h2><p>使用<code>go mod</code>命令。</p>
+<ul>
+<li><code>go mod download</code> 下载模块到本地缓存，缓存路径是 <code>$GOPATH/pkg/mod/cache</code></li>
+<li><code>go mod edit</code> 是提供了命令版编辑 <code>go.mod</code> 的功能，例如 <code>go mod edit -fmt go.mod</code> 会格式化 <code>go.mod</code></li>
+<li><code>go mod graph</code> 把模块之间的依赖图显示出来</li>
+<li><code>go mod init</code> 初始化模块（例如把原本dep管理的依赖关系转换过来）</li>
+<li><code>go mod tidy</code> 增加缺失的包，移除没用的包</li>
+<li><code>go mod vendor</code> 把依赖拷贝到 <code>vendor/</code> 目录下</li>
+<li><code>go mod verify</code> 确认依赖关系</li>
+<li><code>go mod why</code> 解释为什么需要包和模块</li>
+</ul>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><h3 id="go-build"><a href="#go-build" class="headerlink" title="go build"></a>go build</h3><p>Go语言的程序编写基本以源码方式，无论是自己的代码还是第三方代码，并且以 GOPATH 作为工作目录和一套完整的工程目录规则。因此Go语言中日常编译时无须像 C++ 一样配置各种包含路径、链接库地址等。</p>
+<p>Go语言中使用 go build 命令主要用于编译代码。在包的编译过程中，若有必要，会同时编译与之相关联的包。</p>
+<p>go build 有很多种编译方法，如无参数编译、文件列表编译、指定包编译等，使用这些方法都可以输出可执行文件。</p>
+<table>
+<thead>
+<tr>
+<th>附加参数</th>
+<th>备 注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-v</td>
+<td>编译时显示包名</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td>开启并发编译，默认情况下该值为 CPU 逻辑核数</td>
+</tr>
+<tr>
+<td>-a</td>
+<td>强制重新构建</td>
+</tr>
+<tr>
+<td>-n</td>
+<td>打印编译时会用到的所有命令，但不真正执行</td>
+</tr>
+<tr>
+<td>-x</td>
+<td>打印编译时会用到的所有命令</td>
+</tr>
+<tr>
+<td>-race</td>
+<td>开启竞态检测</td>
+</tr>
+</tbody></table>
+<h3 id="go-clean"><a href="#go-clean" class="headerlink" title="go clean"></a>go clean</h3><p>Go语言中<code>go clean</code>命令可以移除当前源码包和关联源码包里面编译生成的文件，这些文件包括以下几种：</p>
+<ul>
+<li>执行<code>go build</code>命令时在当前目录下生成的与包名或者 Go 源码文件同名的可执行文件。在 Windows 下，则是与包名或者 Go 源码文件同名且带有“.exe”后缀的文件。</li>
+<li>执行<code>go test</code>命令并加入<code>-c</code>标记时在当前目录下生成的以包名加“.test”后缀为名的文件。在 Windows 下，则是以包名加“.test.exe”后缀的文件。</li>
+<li>执行<code>go install</code>命令安装当前代码包时产生的结果文件。如果当前代码包中只包含库源码文件，则结果文件指的就是在工作区 pkg 目录下相应的归档文件。如果当前代码包中只包含一个命令源码文件，则结果文件指的就是在工作区 bin 目录下的可执行文件。</li>
+<li>在编译 Go 或 C 源码文件时遗留在相应目录中的文件或目录 。包括：_obj和_test目录，名称为_testmain.go、test.out、build.out或a.out的文件，名称以.5、.6、.8、.a、.o或.so为后缀的文件，这些目录和文件是在执行<code>go build</code>命令时生成在临时目录中的。</li>
+</ul>
+<p><code>go clean</code>命令就像 Java中的<code>maven clean</code>命令一样，会清除掉编译过程中产生的一些文件。在 Java 中通常是 .class 文件，而在Go语言中通常是上面我们所列举的那些文件。<code>go clean</code>命令还可以指定一些参数。对应的参数的含义如下所示：</p>
+<ul>
+<li><code>-i</code> 清除关联的安装的包和可运行文件，也就是通过<code>go install</code>安装的文件；</li>
+<li><code>-n</code> 把需要执行的清除命令打印出来，但是不执行，这样就可以很容易的知道底层是如何运行的；</li>
+<li><code>-r</code> 循环的清除在 import 中引入的包；</li>
+<li><code>-x</code> 打印出来执行的详细命令，其实就是 -n 打印的执行版本；</li>
+<li><code>-cache</code> 删除所有<code>go build</code>命令的缓存</li>
+<li><code>-testcache</code> 删除当前包所有的测试结果</li>
+</ul>
+<p>实际开发中<code>go clean</code>命令使用的可能不是很多，一般都是利用<code>go clean</code>命令清除编译文件，然后再将源码递交到 github 上，方便对于源码的管理。</p>
+<h3 id="go-run"><a href="#go-run" class="headerlink" title="go run"></a>go run</h3><p><code>go run</code>命令会编译源码，并且直接执行源码的 main() 函数，不会在当前目录留下可执行文件。</p>
+<h3 id="go-fmt"><a href="#go-fmt" class="headerlink" title="go fmt"></a>go fmt</h3><p>Go语言的开发团队制定了统一的官方代码风格，并且推出了 gofmt 工具（gofmt 或 go fmt）来帮助开发者格式化他们的代码到统一的风格。</p>
+<p>gofmt 是一个 cli 程序，会优先读取标准输入，如果传入了文件路径的话，会格式化这个文件，如果传入一个目录，会格式化目录中所有 .go 文件，如果不传参数，会格式化当前目录下的所有 .go 文件。</p>
+<p>gofmt 默认不对代码进行简化，使用<code>-s</code>参数可以开启简化代码功能，具体来说会进行如下的转换：</p>
+<p><strong>去除数组、切片、Map 初始化时不必要的类型声明</strong></p>
+<p>如下形式的切片表达式：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token punctuation">[</span><span class="token punctuation">]</span>T<span class="token punctuation">&#123;</span>T<span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span> T<span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span></code></pre>
+
+<p>简化后的代码为：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token punctuation">[</span><span class="token punctuation">]</span>T<span class="token punctuation">&#123;</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>去除数组切片操作时不必要的索引指定</strong></p>
+<p>如下形式的切片表达式：</p>
+<pre class="language-go" data-language="go"><code class="language-go">s<span class="token punctuation">[</span>a<span class="token punctuation">:</span><span class="token function">len</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span><span class="token punctuation">]</span></code></pre>
+
+<p>简化后的代码为：</p>
+<pre class="language-go" data-language="go"><code class="language-go">s<span class="token punctuation">[</span>a<span class="token punctuation">:</span><span class="token punctuation">]</span></code></pre>
+
+<p><strong>去除循环时非必要的变量赋值</strong></p>
+<p>如下形式的循环：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">for</span> x<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">=</span> <span class="token keyword">range</span> v <span class="token punctuation">&#123;</span><span class="token operator">...</span><span class="token punctuation">&#125;</span></code></pre>
+
+<p>简化后的代码为：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">for</span> x <span class="token operator">=</span> <span class="token keyword">range</span> v <span class="token punctuation">&#123;</span><span class="token operator">...</span><span class="token punctuation">&#125;</span></code></pre>
+
+<p>gofmt 命令参数如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th>标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-l</td>
+<td>仅把那些不符合格式化规范的、需要被命令程序改写的源码文件的绝对路径打印到标准输出。而不是把改写后的全部内容都打印到标准输出。</td>
+</tr>
+<tr>
+<td>-w</td>
+<td>把改写后的内容直接写入到文件中，而不是作为结果打印到标准输出。</td>
+</tr>
+<tr>
+<td>-r</td>
+<td>添加形如“a[b:len(a)] -&gt; a[b:]”的重写规则。如果我们需要自定义某些额外的格式化规则，就需要用到它。</td>
+</tr>
+<tr>
+<td>-s</td>
+<td>简化文件中的代码。</td>
+</tr>
+<tr>
+<td>-d</td>
+<td>只把改写前后内容的对比信息作为结果打印到标准输出。而不是把改写后的全部内容都打印到标准输出。 命令程序将使用 diff 命令对内容进行比对。在 Windows 操作系统下可能没有 diff 命令，需要另行安装。</td>
+</tr>
+<tr>
+<td>-e</td>
+<td>打印所有的语法错误到标准输出。如果不使用此标记，则只会打印每行的第 1 个错误且只打印前 10 个错误。</td>
+</tr>
+<tr>
+<td>-comments</td>
+<td>是否保留源码文件中的注释。在默认情况下，此标记会被隐式的使用，并且值为 true。</td>
+</tr>
+<tr>
+<td>-tabwidth</td>
+<td>此标记用于设置代码中缩进所使用的空格数量，默认值为 8。要使此标记生效，需要使用“-tabs”标记并把值设置为 false。</td>
+</tr>
+<tr>
+<td>-tabs</td>
+<td>是否使用 tab（’\t’）来代替空格表示缩进。在默认情况下，此标记会被隐式的使用，并且值为 true。</td>
+</tr>
+<tr>
+<td>-cpuprofile</td>
+<td>是否开启 CPU 使用情况记录，并将记录内容保存在此标记值所指的文件中。</td>
+</tr>
+</tbody></table>
+<p>可以看到 gofmt 命令还支持自定义的重写规则，使用<code>-r</code>参数，按照 pattern -&gt; replacement 的格式传入规则。</p>
+<h3 id="go-install"><a href="#go-install" class="headerlink" title="go install"></a>go install</h3><p>go install 命令的功能和<code>go build</code>命令类似，附加参数绝大多数都可以与 go build 通用。go install 只是将编译的中间文件放在 GOPATH 的 pkg 目录下，以及固定地将编译结果放在 GOPATH 的 bin 目录下。</p>
+<p>这个命令在内部实际上分成了两步操作：第一步是生成结果文件（可执行文件或者 .a 包），第二步会把编译好的结果移到 $GOPATH/pkg 或者 $GOPATH/bin。</p>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get 命令可以借助代码管理工具通过远程拉取或更新代码包及其依赖包，并自动完成编译和安装。整个过程就像安装一个 App 一样简单。</p>
+<p>这个命令可以动态获取远程代码包，目前支持的有 BitBucket、GitHub、Google Code 和 Launchpad。在使用 go get 命令前，需要安装与远程包匹配的代码管理工具，如 Git、SVN、HG 等，参数中需要提供一个包名。</p>
+<p>这个命令在内部实际上分成了两步操作：第一步是下载源码包，第二步是执行 go install。下载源码包的 go 工具会自动根据不同的域名调用不同的源码工具，对应关系如下：</p>
+<p>BitBucket (Mercurial Git)<br>GitHub (Git)<br>Google Code Project Hosting (Git, Mercurial, Subversion)<br>Launchpad (Bazaar)</p>
+<p>所以为了 go get 命令能正常工作，你必须确保安装了合适的源码管理工具，并同时把这些命令加入你的 PATH 中。其实 go get 支持自定义域名的功能。</p>
+<p>使用 go get 时可以配合附加参数显示更多的信息及实现特殊的下载和安装操作，详见下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>附加参数</th>
+<th>备 注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-v</td>
+<td>显示操作流程的日志及信息，方便检查错误</td>
+</tr>
+<tr>
+<td>-u</td>
+<td>下载丢失的包，但不会更新已经存在的包</td>
+</tr>
+<tr>
+<td>-d</td>
+<td>只下载，不安装</td>
+</tr>
+<tr>
+<td>-insecure</td>
+<td>允许使用不安全的 HTTP 方式进行下载操作</td>
+</tr>
+</tbody></table>
+<h3 id="go-test"><a href="#go-test" class="headerlink" title="go test"></a>go test</h3><p>Go语言拥有一套单元测试和性能测试系统，仅需要添加很少的代码就可以快速测试一段需求代码。</p>
+<p>go test 命令，会自动读取源码目录下面名为 *_test.go 的文件，生成并运行测试用的可执行文件。性能测试系统可以给出代码的性能数据，帮助测试者分析性能问题。</p>
+<p>单元测试（unit testing），是指对软件中的最小可测试单元进行检查和验证。对于单元测试中单元的含义，一般要根据实际情况去判定其具体含义，如C语言中单元指一个函数，Java 里单元指一个类，图形化的软件中可以指一个窗口或一个菜单等。总的来说，单元就是人为规定的最小的被测功能模块。</p>
+<p>单元测试是在软件开发过程中要进行的最低级别的测试活动，软件的独立单元将在与程序的其他部分相隔离的情况下进行测试。</p>
+<p>要开始一个单元测试，需要准备一个 go 源码文件，在命名文件时需要让文件必须以<code>_test</code>结尾。默认的情况下，<code>go test</code>命令不需要任何的参数，它会自动把你源码包下面所有 test 文件测试完毕，当然你也可以带上参数。</p>
+<p>这里介绍几个常用的参数：</p>
+<ul>
+<li><code>-bench</code> regexp 执行相应的 benchmarks，例如 -bench=.；</li>
+<li><code>-cover</code> 开启测试覆盖率；</li>
+<li><code>-run</code> regexp 只运行 regexp 匹配的函数，例如 -run=Array 那么就执行包含有 Array 开头的函数；</li>
+<li><code>-v</code> 显示测试的详细命令。</li>
+</ul>
+<p>单元测试源码文件可以由多个测试用例组成，每个测试用例函数需要以<code>Test</code>为前缀，例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">TestXXX</span><span class="token punctuation">(</span> t <span class="token operator">*</span>testing<span class="token punctuation">.</span>T <span class="token punctuation">)</span></code></pre>
+
+<ul>
+<li>测试用例文件不会参与正常源码编译，不会被包含到可执行文件中。</li>
+<li>测试用例文件使用<code>go test</code>指令来执行，没有也不需要 main() 作为函数入口。所有在以<code>_test</code>结尾的源码内以<code>Test</code>开头的函数会自动被执行。</li>
+<li>测试用例可以不传入 <code>*testing.T</code> 参数。</li>
+</ul>
+<p>基准测试-获得代码内存占用和运行效率的性能数据</p>
+<p>基准测试可以测试一段程序的运行性能及耗费 CPU 的程度。Go语言中提供了基准测试框架，使用方法类似于单元测试，使用者无须准备高精度的计时器和各种分析工具，基准测试本身即可以打印出非常标准的测试报告。</p>
+<p>在命令行中添加<code>-benchmem</code>参数以显示内存分配情况。</p>
+<h2 id="package"><a href="#package" class="headerlink" title="package"></a>package</h2><ul>
+<li>在同一个包下面的文件属于同一个工程文件，不用<code>import</code>包，可以直接使用</li>
+<li>在同一个包下面的所有文件的package名，都是一样的</li>
+<li>在同一个包下面的文件<code>package</code>名都建议设为是该目录名，但也可以不是</li>
+</ul>
+</div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>TAYNPG</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="http://example.com/2021/05/01/golang-configuration-command-01/" title="Go的配置和工具-01">http://example.com/2021/05/01/golang-configuration-command-01/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>要不要和我说些什么？</span><br></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> TAYNPG</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div><div class="live_time"><span>本博客已悄悄的地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2021-05-10T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a></div></body></html>
