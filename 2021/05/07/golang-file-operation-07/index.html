@@ -1,0 +1,1273 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="TAYNPG"><meta name="copyright" content="TAYNPG"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Go文件操作-07 | 拐几个弯</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="icon" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"taynpg.github.io","root":"/","title":"土豆呀土豆","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><meta name="description" content="Go的文件处理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go文件操作-07">
+<meta property="og:url" content="https://taynpg.github.io/2021/05/07/golang-file-operation-07/index.html">
+<meta property="og:site_name" content="拐几个弯">
+<meta property="og:description" content="Go的文件处理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-07T12:15:58.000Z">
+<meta property="article:modified_time" content="2021-05-11T03:22:23.283Z">
+<meta property="article:author" content="TAYNPG">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="TAYNPG"><img width="96" loading="lazy" src="/favicon.ico" alt="TAYNPG"></a><div class="site-author-name"><a href="/about/">TAYNPG</a></div><span class="site-name">拐几个弯</span><sub class="site-subtitle">RECORD SOMETING</sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">10</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://blog.csdn.net/Taynpg" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#File%E6%96%87%E4%BB%B6"><span class="toc-number">1.</span> <span class="toc-text">File文件</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#FileInfo%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.</span> <span class="toc-text">FileInfo接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9D%83%E9%99%90"><span class="toc-number">1.2.</span> <span class="toc-text">权限</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%93%E5%BC%80%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.3.</span> <span class="toc-text">打开模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#File%E6%93%8D%E4%BD%9C"><span class="toc-number">1.4.</span> <span class="toc-text">File操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="toc-number">1.5.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#I-O%E6%93%8D%E4%BD%9C"><span class="toc-number">2.</span> <span class="toc-text">I&#x2F;O操作</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#io%E5%8C%85"><span class="toc-number">2.1.</span> <span class="toc-text">io包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E8%AF%BB%E5%86%99"><span class="toc-number">2.2.</span> <span class="toc-text">文件读写</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="toc-number">2.3.</span> <span class="toc-text">实例代码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E5%A4%8D%E5%88%B6"><span class="toc-number">3.</span> <span class="toc-text">文件复制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A"><span class="toc-number">3.1.</span> <span class="toc-text">方法一：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C"><span class="toc-number">3.2.</span> <span class="toc-text">方法二</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E5%86%85%E5%AE%B9"><span class="toc-number">3.3.</span> <span class="toc-text">扩展内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%89"><span class="toc-number">3.4.</span> <span class="toc-text">方法三</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.5.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0"><span class="toc-number">4.</span> <span class="toc-text">断点续传</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Seeker%E6%8E%A5%E5%8F%A3"><span class="toc-number">4.1.</span> <span class="toc-text">Seeker接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0-1"><span class="toc-number">4.2.</span> <span class="toc-text">断点续传</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#bufio%E5%8C%85"><span class="toc-number">5.</span> <span class="toc-text">bufio包</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">5.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#bufio%E5%8C%85-1"><span class="toc-number">5.2.</span> <span class="toc-text">bufio包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E4%BB%A3%E7%A0%81-1"><span class="toc-number">5.3.</span> <span class="toc-text">实例代码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ioutil%E5%8C%85"><span class="toc-number">6.</span> <span class="toc-text">ioutil包</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E6%B3%95"><span class="toc-number">6.1.</span> <span class="toc-text">方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81-1"><span class="toc-number">6.2.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%81%8D%E5%8E%86%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="toc-number">7.</span> <span class="toc-text">遍历文件夹</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://taynpg.github.io/2021/05/07/golang-file-operation-07/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="TAYNPG"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="拐几个弯"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Go文件操作-07</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-07 20:15:58" itemprop="dateCreated datePublished" datetime="2021-05-07T20:15:58+08:00">2021-05-07</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2021-05-11 11:22:23" itemprop="dateModified" datetime="2021-05-11T11:22:23+08:00">2021-05-11</time></div><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/Go%E8%AF%AD%E8%A8%80/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">Go语言</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/golang/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">golang</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h1 id="File文件"><a href="#File文件" class="headerlink" title="File文件"></a>File文件</h1><h2 id="FileInfo接口"><a href="#FileInfo接口" class="headerlink" title="FileInfo接口"></a>FileInfo接口</h2><p>FileInfo接口中定义了File信息相关的方法。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> FileInfo <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+	<span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span>       <span class="token comment">// base name of the file 文件名.扩展名 aa.txt</span>
+	<span class="token function">Size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">int64</span>        <span class="token comment">// 文件大小，字节数 12540</span>
+	<span class="token function">Mode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> FileMode     <span class="token comment">// 文件权限 -rw-rw-rw-</span>
+	<span class="token function">ModTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span> time<span class="token punctuation">.</span>Time <span class="token comment">// 修改时间 2018-04-13 16:30:53 +0800 CST</span>
+	<span class="token function">IsDir</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span>        <span class="token comment">// 是否文件夹</span>
+	<span class="token function">Sys</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>   <span class="token comment">// 基础数据源接口(can return nil)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h2 id="权限"><a href="#权限" class="headerlink" title="权限"></a>权限</h2><p>至于操作权限perm，除非创建文件时才需要指定，不需要创建新文件时可以将其设定为０。虽然go语言给perm权限设定了很多的常量，但是习惯上也可以直接使用数字，如0666(具体含义和Unix系统的一致)。</p>
+<pre class="language-shell" data-language="shell"><code class="language-shell">linux 下有2种文件权限表示方式，即“符号表示”和“八进制表示”。
+
+（1）符号表示方式:
+-      ---         ---        ---
+type   owner       group      others
+文件的权限是这样子分配的 读 写 可执行 分别对应的是 r w x 如果没有那一个权限，用 - 代替
+(-文件 d目录 |连接符号)
+例如：-rwxr-xr-x
+
+
+（2）八进制表示方式：	
+r ——&gt; 004
+w ——&gt; 002
+x ——&gt; 001
+- ——&gt; 000
+
+0755
+0777
+0555
+0444
+0666</code></pre>
+
+<h2 id="打开模式"><a href="#打开模式" class="headerlink" title="打开模式"></a>打开模式</h2><p>文件打开模式：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">const</span> <span class="token punctuation">(</span>
+    O_RDONLY <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_RDONLY <span class="token comment">// 只读模式打开文件</span>
+    O_WRONLY <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_WRONLY <span class="token comment">// 只写模式打开文件</span>
+    O_RDWR   <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_RDWR   <span class="token comment">// 读写模式打开文件</span>
+    O_APPEND <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_APPEND <span class="token comment">// 写操作时将数据附加到文件尾部</span>
+    O_CREATE <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_CREAT  <span class="token comment">// 如果不存在将创建一个新文件</span>
+    O_EXCL   <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_EXCL   <span class="token comment">// 和O_CREATE配合使用，文件必须不存在</span>
+    O_SYNC   <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_SYNC   <span class="token comment">// 打开文件用于同步I/O</span>
+    O_TRUNC  <span class="token builtin">int</span> <span class="token operator">=</span> syscall<span class="token punctuation">.</span>O_TRUNC  <span class="token comment">// 如果可能，打开时清空文件</span>
+<span class="token punctuation">)</span></code></pre>
+
+<h2 id="File操作"><a href="#File操作" class="headerlink" title="File操作"></a>File操作</h2><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> File
+<span class="token comment">//File代表一个打开的文件对象。</span>
+
+<span class="token keyword">func</span> <span class="token function">Create</span><span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>file <span class="token operator">*</span>File<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Create采用模式0666（任何人都可读写，不可执行）创建一个名为name的文件，如果文件已存在会截断它（为空文件）。如果成功，返回的文件对象可用于I/O；对应的文件描述符具有O_RDWR模式。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token function">Open</span><span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>file <span class="token operator">*</span>File<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Open打开一个文件用于读取。如果操作成功，返回的文件对象的方法可用于读取数据；对应的文件描述符具有O_RDONLY模式。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token function">OpenFile</span><span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">,</span> flag <span class="token builtin">int</span><span class="token punctuation">,</span> perm FileMode<span class="token punctuation">)</span> <span class="token punctuation">(</span>file <span class="token operator">*</span>File<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//OpenFile是一个更一般性的文件打开函数，大多数调用者都应用Open或Create代替本函数。它会使用指定的选项（如O_RDONLY等）、指定的模式（如0666等）打开指定名称的文件。如果操作成功，返回的文件对象可用于I/O。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token function">NewFile</span><span class="token punctuation">(</span>fd <span class="token builtin">uintptr</span><span class="token punctuation">,</span> name <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token operator">*</span>File
+<span class="token comment">//NewFile使用给出的Unix文件描述符和名称创建一个文件。</span>
+
+<span class="token keyword">func</span> <span class="token function">Pipe</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>r <span class="token operator">*</span>File<span class="token punctuation">,</span> w <span class="token operator">*</span>File<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Pipe返回一对关联的文件对象。从r的读取将返回写入w的数据。本函数会返回两个文件对象和可能的错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span>
+<span class="token comment">//Name方法返回（提供给Open/Create等方法的）文件名称。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Stat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>fi FileInfo<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Stat返回描述文件f的FileInfo类型值。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Fd</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">uintptr</span>
+<span class="token comment">//Fd返回与文件f对应的整数类型的Unix文件描述符。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Chdir</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+<span class="token comment">//Chdir将当前工作目录修改为f，f必须是一个目录。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Chmod</span><span class="token punctuation">(</span>mode FileMode<span class="token punctuation">)</span> <span class="token builtin">error</span>
+<span class="token comment">//Chmod修改文件的模式。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Chown</span><span class="token punctuation">(</span>uid<span class="token punctuation">,</span> gid <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+<span class="token comment">//Chown修改文件的用户ID和组ID。如果出错，错误底层类型是*PathError。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+<span class="token comment">//Close关闭文件f，使文件不能用于读写。它返回可能出现的错误。</span>
+
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Readdir</span><span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>fi <span class="token punctuation">[</span><span class="token punctuation">]</span>FileInfo<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Readdir读取目录f的内容，返回一个有n个成员的[]FileInfo，这些FileInfo是被Lstat返回的，采用目录顺序。对本函数的下一次调用会返回上一次调用剩余未读取的内容的信息。如果n>0，Readdir函数会返回一个最多n个成员的切片。这时，如果Readdir返回一个空切片，它会返回一个非nil的错误说明原因。如果到达了目录f的结尾，返回值err会是io.EOF。如果n&lt;=0，Readdir函数返回目录中剩余所有文件对象的FileInfo构成的切片。此时，如果Readdir调用成功（读取所有内容直到结尾），它会返回该切片和nil的错误值。如果在到达结尾前遇到错误，会返回之前成功读取的FileInfo构成的切片和该错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Readdirnames</span><span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>names <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">string</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Readdir读取目录f的内容，返回一个有n个成员的[]string，切片成员为目录中文件对象的名字，采用目录顺序。对本函数的下一次调用会返回上一次调用剩余未读取的内容的信息。如果n>0，Readdir函数会返回一个最多n个成员的切片。这时，如果Readdir返回一个空切片，它会返回一个非nil的错误说明原因。如果到达了目录f的结尾，返回值err会是io.EOF。如果n&lt;=0，Readdir函数返回目录中剩余所有文件对象的名字构成的切片。此时，如果Readdir调用成功（读取所有内容直到结尾），它会返回该切片和nil的错误值。如果在到达结尾前遇到错误，会返回之前成功读取的名字构成的切片和该错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Truncate</span><span class="token punctuation">(</span>size <span class="token builtin">int64</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+<span class="token comment">//Truncate改变文件的大小，它不会改变I/O的当前位置。 如果截断文件，多出的部分就会被丢弃。如果出错，错误底层类型是*PathError。</span></code></pre>
+
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><p>文件信息：FileInfo</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"os"</span>
+	<span class="token string">"fmt"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	FileInfo：文件信息
+		interface
+			Name()，文件名
+			Size()，文件大小，字节为单位
+			IsDir()，是否是目录
+			ModTime()，修改时间
+			Mode()，权限
+
+	 */</span>
+	fileInfo<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Stat</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/aa.txt"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err :"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">&#125;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"%T\n"</span><span class="token punctuation">,</span> fileInfo<span class="token punctuation">)</span>
+	<span class="token comment">//文件名</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>fileInfo<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token comment">//文件大小</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>fileInfo<span class="token punctuation">.</span><span class="token function">Size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token comment">//是否是目录</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>fileInfo<span class="token punctuation">.</span><span class="token function">IsDir</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//IsDirectory</span>
+	<span class="token comment">//修改时间</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>fileInfo<span class="token punctuation">.</span><span class="token function">ModTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token comment">//权限</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>fileInfo<span class="token punctuation">.</span><span class="token function">Mode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//-rw-r--r--</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-shell" data-language="shell"><code class="language-shell">*os.fileStat
+Go语言-01-简史及语言介绍.md
+34250
+false
+2021-02-09 00:11:31.7599198 +0800 CST
+-rwxrwxrwx</code></pre>
+
+<p>文件操作实例：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"path/filepath"</span>
+	<span class="token string">"path"</span>
+	<span class="token string">"os"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	文件操作：
+	1.路径：
+		相对路径：relative
+			ab.txt
+			相对于当前工程
+		绝对路径：absolute
+			/Users/ruby/Documents/pro/a/aa.txt
+
+		.当前目录
+		..上一层
+	2.创建文件夹，如果文件夹存在，创建失败
+		os.MkDir()，创建一层
+		os.MkDirAll()，可以创建多层
+
+	3.创建文件，Create采用模式0666（任何人都可读写，不可执行）创建一个名为name的文件，如果文件已存在会截断它（为空文件）
+		os.Create()，创建文件
+
+	4.打开文件：让当前的程序，和指定的文件之间建立一个连接
+		os.Open(filename)
+		os.OpenFile(filename,mode,perm)
+
+	5.关闭文件：程序和文件之间的链接断开。
+		file.Close()
+
+	5.删除文件或目录：慎用，慎用，再慎用
+		os.Remove()，删除文件和空目录
+		os.RemoveAll()，删除所有
+	 */</span>
+	 <span class="token comment">//1.路径</span>
+	 fileName1 <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/aa.txt"</span>
+	 fileName2 <span class="token operator">:=</span> <span class="token string">"bb.txt"</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>filepath<span class="token punctuation">.</span><span class="token function">IsAbs</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//true</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>filepath<span class="token punctuation">.</span><span class="token function">IsAbs</span><span class="token punctuation">(</span>fileName2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//false</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>filepath<span class="token punctuation">.</span><span class="token function">Abs</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">)</span><span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>filepath<span class="token punctuation">.</span><span class="token function">Abs</span><span class="token punctuation">(</span>fileName2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// /Users/ruby/go/src/l_file/bb.txt</span>
+
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"获取父目录："</span><span class="token punctuation">,</span> path<span class="token punctuation">.</span><span class="token function">Join</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">,</span> <span class="token string">".."</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	 <span class="token comment">//2.创建目录</span>
+	 err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Mkdir</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/bb"</span><span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"文件夹创建成功。。"</span><span class="token punctuation">)</span>
+	 err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">MkdirAll</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/cc/dd/ee"</span><span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"多层文件夹创建成功"</span><span class="token punctuation">)</span>
+
+	 <span class="token comment">//3.创建文件:Create采用模式0666（任何人都可读写，不可执行）创建一个名为name的文件，如果文件已存在会截断它（为空文件）</span>
+	 file1<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Create</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/ab.txt"</span><span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err："</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>file1<span class="token punctuation">)</span>
+
+	 file2<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Create</span><span class="token punctuation">(</span>fileName2<span class="token punctuation">)</span><span class="token comment">//创建相对路径的文件，是以当前工程为参照的</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err :"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>file2<span class="token punctuation">)</span>
+
+	 <span class="token comment">//4.打开文件：</span>
+	 file3<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">)</span> <span class="token comment">//只读的</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>file3<span class="token punctuation">)</span>
+	<span class="token comment">/*
+	第一个参数：文件名称
+	第二个参数：文件的打开方式
+		const (
+	// Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
+		O_RDONLY int = syscall.O_RDONLY // open the file read-only.
+		O_WRONLY int = syscall.O_WRONLY // open the file write-only.
+		O_RDWR   int = syscall.O_RDWR   // open the file read-write.
+		// The remaining values may be or'ed in to control behavior.
+		O_APPEND int = syscall.O_APPEND // append data to the file when writing.
+		O_CREATE int = syscall.O_CREAT  // create a new file if none exists.
+		O_EXCL   int = syscall.O_EXCL   // used with O_CREATE, file must not exist.
+		O_SYNC   int = syscall.O_SYNC   // open for synchronous I/O.
+		O_TRUNC  int = syscall.O_TRUNC  // truncate regular writable file when opened.
+	)
+	第三个参数：文件的权限：文件不存在创建文件，需要指定权限
+	 */</span>
+	 file4<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_RDONLY <span class="token operator">|</span> os<span class="token punctuation">.</span>O_WRONLY<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span> err
+	 <span class="token punctuation">&#125;</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>file4<span class="token punctuation">)</span>
+
+	 <span class="token comment">//5关闭文件，</span>
+	 file4<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//6.删除文件或文件夹：</span>
+	<span class="token comment">//删除文件</span>
+	err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/aa.txt"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span> err
+	<span class="token punctuation">&#125;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"删除文件成功。"</span><span class="token punctuation">)</span>
+	
+	<span class="token comment">//删除目录</span>
+	err <span class="token operator">:=</span>  os<span class="token punctuation">.</span><span class="token function">RemoveAll</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a/cc"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">&#125;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"删除目录成功。"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="I-O操作"><a href="#I-O操作" class="headerlink" title="I/O操作"></a>I/O操作</h1><p>I/O操作也叫输入输出操作。其中I是指Input，O是指Output，用于读或者写数据的，有些语言中也叫流操作，是指数据通信的通道。</p>
+<p>Golang 标准库对 IO 的抽象非常精巧，各个组件可以随意组合，可以作为接口设计的典范。</p>
+<h2 id="io包"><a href="#io包" class="headerlink" title="io包"></a>io包</h2><p>io包中提供I/O原始操作的一系列接口。它主要包装了一些已有的实现，如 os 包中的那些，并将这些抽象成为实用性的功能和一些其他相关的接口。</p>
+<p>由于这些接口和原始的操作以不同的实现包装了低级操作，客户不应假定它们对于并行执行是安全的。</p>
+<p>在io包中最重要的是两个接口：Reader和Writer接口，首先来介绍这两个接口．</p>
+<p>Reader接口的定义，Read()方法用于读取数据。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> Reader <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">Read</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+Read 将 <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> 个字节读取到 p 中。它返回读取的字节数 n（<span class="token number">0</span> <span class="token operator">&lt;=</span> n <span class="token operator">&lt;=</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>）以及任何遇到的错误。即使 Read 返回的 n <span class="token operator">&lt;</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，它也会在调用过程中使用 p的全部作为暂存空间。若一些数据可用但不到 <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> 个字节，Read 会照例返回可用的东西，而不是等待更多。
+
+当 Read 在成功读取 n <span class="token operator">></span> <span class="token number">0</span> 个字节后遇到一个错误或 EOF 情况，它就会返回读取的字节数。它会从相同的调用中返回（非<span class="token boolean">nil</span>的）错误或从随后的调用中返回错误（和 n <span class="token operator">==</span> <span class="token number">0</span>）。这种一般情况的一个例子就是 Reader 在输入流结束时会返回一个非零的字节数，可能的返回不是 err <span class="token operator">==</span> EOF 就是 err <span class="token operator">==</span> <span class="token boolean">nil</span>。无论如何，下一个 Read 都应当返回 <span class="token number">0</span><span class="token punctuation">,</span> EOF。
+
+调用者应当总在考虑到错误 err 前处理 n <span class="token operator">></span> <span class="token number">0</span> 的字节。这样做可以在读取一些字节，以及允许的 EOF 行为后正确地处理I<span class="token operator">/</span>O错误。
+
+Read 的实现会阻止返回零字节的计数和一个 <span class="token boolean">nil</span> 错误，调用者应将这种情况视作空操作。</code></pre>
+
+<p>Writer接口的定义，Write()方法用于写出数据。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> Writer <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">Write</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+Write 将 <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> 个字节从 p 中写入到基本数据流中。它返回从 p 中被写入的字节数n（<span class="token number">0</span> <span class="token operator">&lt;=</span> n <span class="token operator">&lt;=</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>）以及任何遇到的引起写入提前停止的错误。若 Write 返回的n <span class="token operator">&lt;</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，它就必须返回一个非<span class="token boolean">nil</span>的错误。Write 不能修改此切片的数据，即便它是临时的。</code></pre>
+
+<p>Seeker接口的定义，封装了基本的 Seek 方法。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> Seeker <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">Seek</span><span class="token punctuation">(</span>offset <span class="token builtin">int64</span><span class="token punctuation">,</span> whence <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+Seeker 用来移动数据的读写指针
+Seek 设置下一次读写操作的指针位置，每次的读写操作都是从指针位置开始的
+whence 的含义：
+	如果 whence 为 <span class="token number">0</span>：表示从数据的开头开始移动指针
+	如果 whence 为 <span class="token number">1</span>：表示从数据的当前指针位置开始移动指针
+	如果 whence 为 <span class="token number">2</span>：表示从数据的尾部开始移动指针
+offset 是指针移动的偏移量
+	返回移动后的指针位置和移动过程中遇到的任何错误</code></pre>
+
+<p>ReaderFrom接口的定义，封装了基本的 ReadFrom 方法。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> ReaderFrom <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">ReadFrom</span><span class="token punctuation">(</span>r Reader<span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int64</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+ReadFrom 从 r 中读取数据到对象的数据流中
+	直到 r 返回 EOF 或 r 出现读取错误为止
+	返回值 n 是读取的字节数
+	返回值 err 就是 r 的返回值 err</code></pre>
+
+<p>WriterTo接口的定义，封装了基本的 WriteTo 方法。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> WriterTo <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">WriteTo</span><span class="token punctuation">(</span>w Writer<span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int64</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+WriterTo 将对象的数据流写入到 w 中
+	直到对象的数据流全部写入完毕或遇到写入错误为止
+	返回值 n 是写入的字节数
+	返回值 err 就是 w 的返回值 err</code></pre>
+
+<p>定义ReaderAt接口，ReaderAt 接口封装了基本的 ReadAt 方法</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> ReaderAt <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">ReadAt</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> off <span class="token builtin">int64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+ReadAt 从对象数据流的 off 处读出数据到 p 中
+	忽略数据的读写指针，从数据的起始位置偏移 off 处开始读取
+	如果对象的数据流只有部分可用，不足以填满 p
+	则 ReadAt 将等待所有数据可用之后，继续向 p 中写入
+	直到将 p 填满后再返回
+	在这点上 ReadAt 要比 Read 更严格
+	返回读取的字节数 n 和读取时遇到的错误
+	如果 n <span class="token operator">&lt;</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，则需要返回一个 err 值来说明
+	为什么没有将 p 填满（比如 EOF）
+	如果 n <span class="token operator">=</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，而且对象的数据没有全部读完，则
+	err 将返回 <span class="token boolean">nil</span>
+	如果 n <span class="token operator">=</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，而且对象的数据刚好全部读完，则
+	err 将返回 EOF 或者 <span class="token boolean">nil</span>（不确定）</code></pre>
+
+<p>定义WriterAt接口，WriterAt 接口封装了基本的 WriteAt 方法</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> WriterAt <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">WriteAt</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> off <span class="token builtin">int64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+WriteAt 将 p 中的数据写入到对象数据流的 off 处
+	忽略数据的读写指针，从数据的起始位置偏移 off 处开始写入
+	返回写入的字节数和写入时遇到的错误
+	如果 n <span class="token operator">&lt;</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>，则必须返回一个 err 值来说明
+	为什么没有将 p 完全写入</code></pre>
+
+<h2 id="文件读写"><a href="#文件读写" class="headerlink" title="文件读写"></a>文件读写</h2><p>file类是在os包中的，封装了底层的文件描述符和相关信息，同时封装了Read和Write的实现。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Read</span><span class="token punctuation">(</span>b <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Read方法从f中读取最多len(b)字节数据并写入b。它返回读取的字节数和可能遇到的任何错误。文件终止标志是读取0个字节且返回值err为io.EOF。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">ReadAt</span><span class="token punctuation">(</span>b <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> off <span class="token builtin">int64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//ReadAt从指定的位置（相对于文件开始位置）读取len(b)字节数据并写入b。它返回读取的字节数和可能遇到的任何错误。当n&lt;len(b)时，本方法总是会返回错误；如果是因为到达文件结尾，返回值err会是io.EOF。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Write</span><span class="token punctuation">(</span>b <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Write向文件中写入len(b)字节数据。它返回写入的字节数和可能遇到的任何错误。如果返回值n!=len(b)，本方法会返回一个非nil的错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">WriteString</span><span class="token punctuation">(</span>s <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>ret <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//WriteString类似Write，但接受一个字符串参数。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">WriteAt</span><span class="token punctuation">(</span>b <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> off <span class="token builtin">int64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//WriteAt在指定的位置（相对于文件开始位置）写入len(b)字节数据。它返回写入的字节数和可能遇到的任何错误。如果返回值n!=len(b)，本方法会返回一个非nil的错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Seek</span><span class="token punctuation">(</span>offset <span class="token builtin">int64</span><span class="token punctuation">,</span> whence <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>ret <span class="token builtin">int64</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Seek设置下一次读/写的位置。offset为相对偏移量，而whence决定相对位置：0为相对文件开头，1为相对当前位置，2为相对文件结尾。它返回新的偏移量（相对开头）和可能的错误。</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>File<span class="token punctuation">)</span> <span class="token function">Sync</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>err <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token comment">//Sync递交文件的当前内容进行稳定的存储。一般来说，这表示将文件系统的最近写入的数据在内存中的拷贝刷新到硬盘中稳定保存。</span></code></pre>
+
+<h2 id="实例代码"><a href="#实例代码" class="headerlink" title="实例代码"></a>实例代码</h2><p>读取文件中的数据：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"io"</span>
+	<span class="token string">"os"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+		读取数据：
+			Reader接口：
+				Read(p []byte)(n int, error)
+	*/</span>
+	<span class="token comment">//读取本地aa.txt文件中的数据</span>
+	<span class="token comment">//step1：打开文件</span>
+	fileName <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/aa.txt"</span>
+	file<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>fileName<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"err:"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//step3：关闭文件</span>
+	<span class="token keyword">defer</span> file<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//step2：读取数据</span>
+	bs <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span>
+	<span class="token comment">/*
+		 //第一次读取
+		n, err := file.Read(bs)
+		fmt.Println(err) //&lt;nil>
+		fmt.Println(n)   //4
+		fmt.Println(bs)  //[97 98 99 100]
+		fmt.Println(string(bs)) //abcd
+
+		//第二次读取
+		n, err = file.Read(bs)
+		fmt.Println(err)//&lt;nil>
+		fmt.Println(n)//4
+		fmt.Println(bs) //[101 102 103 104]
+		fmt.Println(string(bs)) //efgh
+
+		//第三次读取
+		n, err = file.Read(bs)
+		fmt.Println(err) //&lt;nil>
+		fmt.Println(n) //2
+		fmt.Println(bs) //[105 106 103 104]
+		fmt.Println(string(bs)) //ijgh
+
+		//第四次读取
+		n, err = file.Read(bs)
+		fmt.Println(err) //EOF
+		fmt.Println(n) //0
+	*/</span>
+	n <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">1</span>
+	<span class="token keyword">for</span> <span class="token punctuation">&#123;</span>
+		n<span class="token punctuation">,</span> err <span class="token operator">=</span> file<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>bs<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> n <span class="token operator">==</span> <span class="token number">0</span> <span class="token operator">||</span> err <span class="token operator">==</span> io<span class="token punctuation">.</span>EOF <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"读取到了文件的末尾，结束读取操作。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">string</span><span class="token punctuation">(</span>bs<span class="token punctuation">[</span><span class="token punctuation">:</span>n<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>写出数据到本地文件：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"os"</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"log"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	写出数据：
+	 */</span>
+
+	fileName <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/ab.txt"</span>
+	<span class="token comment">//step1：打开文件</span>
+	<span class="token comment">//step2：写出数据</span>
+	<span class="token comment">//step3：关闭文件</span>
+	<span class="token comment">//file, err := os.Open(fileName)</span>
+	file<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>fileName<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_CREATE <span class="token operator">|</span> os<span class="token punctuation">.</span>O_WRONLY <span class="token operator">|</span> os<span class="token punctuation">.</span>O_APPEND<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">defer</span> file<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//写出数据</span>
+	<span class="token comment">//bs := []byte&#123;65, 66, 67, 68, 69, 70&#125;//A,B,C,D,E,F</span>
+	bs <span class="token operator">:=</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token builtin">byte</span><span class="token punctuation">&#123;</span><span class="token number">97</span><span class="token punctuation">,</span> <span class="token number">98</span><span class="token punctuation">,</span> <span class="token number">99</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">&#125;</span> <span class="token comment">//a,b,c,d</span>
+	<span class="token comment">//n, err := file.Write(bs)</span>
+	n<span class="token punctuation">,</span> err <span class="token operator">:=</span> file<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>bs<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+	<span class="token function">HandleErr</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	file<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//直接写出字符串</span>
+	n<span class="token punctuation">,</span> err <span class="token operator">=</span> file<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span><span class="token string">"HelloWorld"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+	<span class="token function">HandleErr</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+
+	file<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span>
+	n<span class="token punctuation">,</span> err <span class="token operator">=</span> file<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token function">byte</span><span class="token punctuation">(</span><span class="token string">"today"</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+	<span class="token function">HandleErr</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">HandleErr</span><span class="token punctuation">(</span>err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		log<span class="token punctuation">.</span><span class="token function">Fatal</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="文件复制"><a href="#文件复制" class="headerlink" title="文件复制"></a>文件复制</h1><p>在io包中主要是操作流的一些方法，今天主要学习一下copy。就是把一个文件复制到另一个目录下。它的原理就是通过程序，从源文件读取文件中的数据，在写出到目标文件里。</p>
+<h2 id="方法一："><a href="#方法一：" class="headerlink" title="方法一："></a>方法一：</h2><p>我们可以通过io包下的Read()和Write()方法，边读边写，就能够实现文件的复制。这个方法是按块读取文件，块的大小也会影响到程序的性能。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">/*
+该函数的功能：实现文件的拷贝，返回值是拷贝的总数量(字节),错误
+ */</span>
+<span class="token keyword">func</span> <span class="token function">copyFile1</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">,</span> destFile <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	file1<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+	file2<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>destFile<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_WRONLY <span class="token operator">|</span> os<span class="token punctuation">.</span>O_CREATE<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">defer</span> file1<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token keyword">defer</span> file2<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token comment">//拷贝数据</span>
+	bs <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token number">1024</span><span class="token punctuation">,</span> <span class="token number">1024</span><span class="token punctuation">)</span>
+	n <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">1</span> <span class="token comment">//读取的数据量</span>
+	total <span class="token operator">:=</span> <span class="token number">0</span>
+	<span class="token keyword">for</span> <span class="token punctuation">&#123;</span>
+		n<span class="token punctuation">,</span> err <span class="token operator">=</span> file1<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>bs<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> err <span class="token operator">==</span> io<span class="token punctuation">.</span>EOF <span class="token operator">||</span> n <span class="token operator">==</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"拷贝完毕。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"报错了。。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">return</span> total<span class="token punctuation">,</span> err
+		<span class="token punctuation">&#125;</span>
+		total <span class="token operator">+=</span> n
+		file2<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>bs<span class="token punctuation">[</span><span class="token punctuation">:</span>n<span class="token punctuation">]</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> total<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h2 id="方法二"><a href="#方法二" class="headerlink" title="方法二"></a>方法二</h2><p>io包下的Copy()方法实现，我们也可以直接使用io包下的Copy()方法。</p>
+<p>示例代码如下：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">copyFile2</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">,</span> destFile <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	file1<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+	file2<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>destFile<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_WRONLY <span class="token operator">|</span> os<span class="token punctuation">.</span>O_CREATE<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">defer</span> file1<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token keyword">defer</span> file2<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">return</span> io<span class="token punctuation">.</span><span class="token function">Copy</span><span class="token punctuation">(</span>file2<span class="token punctuation">,</span> file1<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h2 id="扩展内容"><a href="#扩展内容" class="headerlink" title="扩展内容"></a>扩展内容</h2><p>在io包（golang 版本 1.12）中，不止提供了Copy()方法，还有另外2个公开的copy方法：CopyN()，CopyBuffer()。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> Copy（dst<span class="token punctuation">,</span>src） 为复制src 全部到 dst 中。
+
+<span class="token keyword">func</span> <span class="token function">CopyN</span><span class="token punctuation">(</span>dst<span class="token punctuation">,</span>src<span class="token punctuation">,</span>n<span class="token punctuation">)</span> 为复制src 中 n 个字节到 dst。
+
+<span class="token keyword">func</span> CopyBuffer（dst<span class="token punctuation">,</span>src<span class="token punctuation">,</span>buf）为指定一个buf缓存区，以这个大小完全复制。</code></pre>
+
+<p>无论是哪个copy方法最终都是由copyBuffer（）这个私有方法实现的。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">copyBuffer</span><span class="token punctuation">(</span>dst Writer<span class="token punctuation">,</span> src Reader<span class="token punctuation">,</span> buf <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>written <span class="token builtin">int64</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">// If the reader has a WriteTo method, use it to do the copy.</span>
+	<span class="token comment">// Avoids an allocation and a copy.</span>
+	<span class="token keyword">if</span> wt<span class="token punctuation">,</span> ok <span class="token operator">:=</span> src<span class="token punctuation">.</span><span class="token punctuation">(</span>WriterTo<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> wt<span class="token punctuation">.</span><span class="token function">WriteTo</span><span class="token punctuation">(</span>dst<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">// Similarly, if the writer has a ReadFrom method, use it to do the copy.</span>
+	<span class="token keyword">if</span> rt<span class="token punctuation">,</span> ok <span class="token operator">:=</span> dst<span class="token punctuation">.</span><span class="token punctuation">(</span>ReaderFrom<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> rt<span class="token punctuation">.</span><span class="token function">ReadFrom</span><span class="token punctuation">(</span>src<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">if</span> buf <span class="token operator">==</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		size <span class="token operator">:=</span> <span class="token number">32</span> <span class="token operator">*</span> <span class="token number">1024</span>
+		<span class="token keyword">if</span> l<span class="token punctuation">,</span> ok <span class="token operator">:=</span> src<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>LimitedReader<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token operator">&amp;&amp;</span> <span class="token function">int64</span><span class="token punctuation">(</span>size<span class="token punctuation">)</span> <span class="token operator">></span> l<span class="token punctuation">.</span>N <span class="token punctuation">&#123;</span>
+			<span class="token keyword">if</span> l<span class="token punctuation">.</span>N <span class="token operator">&lt;</span> <span class="token number">1</span> <span class="token punctuation">&#123;</span>
+				size <span class="token operator">=</span> <span class="token number">1</span>
+			<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+				size <span class="token operator">=</span> <span class="token function">int</span><span class="token punctuation">(</span>l<span class="token punctuation">.</span>N<span class="token punctuation">)</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+		buf <span class="token operator">=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> size<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">for</span> <span class="token punctuation">&#123;</span>
+		nr<span class="token punctuation">,</span> er <span class="token operator">:=</span> src<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>buf<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> nr <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+			nw<span class="token punctuation">,</span> ew <span class="token operator">:=</span> dst<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>buf<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">:</span>nr<span class="token punctuation">]</span><span class="token punctuation">)</span>
+			<span class="token keyword">if</span> nw <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+				written <span class="token operator">+=</span> <span class="token function">int64</span><span class="token punctuation">(</span>nw<span class="token punctuation">)</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">if</span> ew <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+				err <span class="token operator">=</span> ew
+				<span class="token keyword">break</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">if</span> nr <span class="token operator">!=</span> nw <span class="token punctuation">&#123;</span>
+				err <span class="token operator">=</span> ErrShortWrite
+				<span class="token keyword">break</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> er <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">if</span> er <span class="token operator">!=</span> EOF <span class="token punctuation">&#123;</span>
+				err <span class="token operator">=</span> er
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> written<span class="token punctuation">,</span> err
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>从这部分代码可以看出，复制主要分为3种。</p>
+<p>1.如果被复制的Reader（src）会尝试能否断言成writerTo，如果可以则直接调用下面的writerTo方法</p>
+<p>2.如果 Writer（dst） 会尝试能否断言成ReadFrom ，如果可以则直接调用下面的readfrom方法</p>
+<p>3.如果都木有实现，则调用底层read实现复制。</p>
+<p>其中，有这么一段代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">if</span> buf <span class="token operator">==</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		size <span class="token operator">:=</span> <span class="token number">32</span> <span class="token operator">*</span> <span class="token number">1024</span>
+		<span class="token keyword">if</span> l<span class="token punctuation">,</span>  ok <span class="token operator">:=</span> src<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>LimitedReader<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token operator">&amp;&amp;</span> <span class="token function">int64</span><span class="token punctuation">(</span>size<span class="token punctuation">)</span> <span class="token operator">></span> l<span class="token punctuation">.</span>N <span class="token punctuation">&#123;</span>
+			<span class="token keyword">if</span> l<span class="token punctuation">.</span>N <span class="token operator">&lt;</span> <span class="token number">1</span> <span class="token punctuation">&#123;</span>
+				size <span class="token operator">=</span> <span class="token number">1</span>
+			<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+				size <span class="token operator">=</span> <span class="token function">int</span><span class="token punctuation">(</span>l<span class="token punctuation">.</span>N<span class="token punctuation">)</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+		buf <span class="token operator">=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> size<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span></code></pre>
+
+<p>这部分主要是实现了对Copy和CopyN的处理。通过上面的调用关系图，我们看出CopyN在调用后，会把Reader转成LimiteReader。</p>
+<p>区别是如果Copy，直接建立一个缓存区默认大小为 32* 1024 的buf，如果是CopyN 会先判断 要复制的字节数，如果小于默认大小，会创建一个等于要复制字节数的buf。</p>
+<h2 id="方法三"><a href="#方法三" class="headerlink" title="方法三"></a>方法三</h2><p>ioutil包，第三种方法是使用ioutil包中的 <code>ioutil.WriteFile()</code>和 <code>ioutil.ReadFile()</code>，但由于使用一次性读取文件，再一次性写入文件的方式，所以该方法不适用于大文件，容易内存溢出。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">copyFile3</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">,</span> destFile <span class="token builtin">string</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">,</span><span class="token builtin">error</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+	input<span class="token punctuation">,</span> err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">ReadFile</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+
+	err <span class="token operator">=</span> ioutil<span class="token punctuation">.</span><span class="token function">WriteFile</span><span class="token punctuation">(</span>destFile<span class="token punctuation">,</span> input<span class="token punctuation">,</span> <span class="token number">0644</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"操作失败："</span><span class="token punctuation">,</span> destFile<span class="token punctuation">)</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">return</span> <span class="token function">len</span><span class="token punctuation">(</span>input<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，我们来测试一下这3种拷贝需要花费时间，拷贝的文件都是一样的一个mp4文件(400M)，</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+		复制文件：
+	*/</span>
+	<span class="token comment">//srcFile := "/home/ruby/文档/pro/aa.txt"</span>
+	<span class="token comment">//destFile := "/home/ruby/文档/aa.txt"</span>
+
+	srcFile <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/001_小程序入门.mp4"</span>
+	destFile <span class="token operator">:=</span> <span class="token string">"001_小程序入门.mp4"</span>
+	total<span class="token punctuation">,</span> err <span class="token operator">:=</span> <span class="token function">copyFile1</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">,</span> destFile<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>total<span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>第一种：io包下Read()和Write()直接读写：我们自己创建读取数据的切片的大小，直接影响性能。</p>
+<pre class="language-go" data-language="go"><code class="language-go">localhost<span class="token punctuation">:</span>l_file ruby$ time <span class="token keyword">go</span> run demo05_copy<span class="token punctuation">.</span><span class="token keyword">go</span> 
+拷贝完毕。。
+<span class="token operator">&lt;</span><span class="token boolean">nil</span><span class="token operator">></span>
+<span class="token number">401386819</span>
+
+<span class="token builtin">real</span>    <span class="token number">0</span>m7<span class="token punctuation">.</span><span class="token number">911</span>s
+user    <span class="token number">0</span>m2<span class="token punctuation">.</span><span class="token number">900</span>s
+sys     <span class="token number">0</span>m7<span class="token punctuation">.</span><span class="token number">661</span>s</code></pre>
+
+<p>第二种：io包下Copy()方法：</p>
+<pre class="language-go" data-language="go"><code class="language-go">localhost<span class="token punctuation">:</span>l_file ruby$ time <span class="token keyword">go</span> run demo05_copy<span class="token punctuation">.</span><span class="token keyword">go</span> 
+<span class="token operator">&lt;</span><span class="token boolean">nil</span><span class="token operator">></span>
+<span class="token number">401386819</span>
+
+<span class="token builtin">real</span>    <span class="token number">0</span>m1<span class="token punctuation">.</span><span class="token number">594</span>s
+user    <span class="token number">0</span>m0<span class="token punctuation">.</span><span class="token number">533</span>s
+sys     <span class="token number">0</span>m1<span class="token punctuation">.</span><span class="token number">136</span>s</code></pre>
+
+<p>第三种：ioutil包</p>
+<pre class="language-go" data-language="go"><code class="language-go">localhost<span class="token punctuation">:</span>l_file ruby$ time <span class="token keyword">go</span> run demo05_copy<span class="token punctuation">.</span><span class="token keyword">go</span> 
+<span class="token operator">&lt;</span><span class="token boolean">nil</span><span class="token operator">></span>
+<span class="token number">401386819</span>
+
+<span class="token builtin">real</span>    <span class="token number">0</span>m1<span class="token punctuation">.</span><span class="token number">515</span>s
+user    <span class="token number">0</span>m0<span class="token punctuation">.</span><span class="token number">339</span>s
+sys     <span class="token number">0</span>m0<span class="token punctuation">.</span><span class="token number">625</span>s</code></pre>
+
+<p>运行结果：</p>
+<p>这3种方式，在性能上，不管是还是io.Copy()还是ioutil包，性能都是还不错的。</p>
+<h1 id="断点续传"><a href="#断点续传" class="headerlink" title="断点续传"></a>断点续传</h1><h2 id="Seeker接口"><a href="#Seeker接口" class="headerlink" title="Seeker接口"></a>Seeker接口</h2><p>Seeker是包装基本Seek方法的接口。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> Seeker <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">Seek</span><span class="token punctuation">(</span>offset <span class="token builtin">int64</span><span class="token punctuation">,</span> whence <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>seek(offset,whence),设置指针光标的位置，随机读写文件：</p>
+<pre class="language-go" data-language="go"><code class="language-go">第一个参数：偏移量
+第二个参数：如何设置            
+
+            <span class="token number">0</span>：seekStart表示相对于文件开始，
+            <span class="token number">1</span>：seekCurrent表示相对于当前偏移量，
+            <span class="token number">2</span>：seek end表示相对于结束。
+<span class="token keyword">const</span> <span class="token punctuation">(</span>
+	SeekStart   <span class="token operator">=</span> <span class="token number">0</span> <span class="token comment">// seek relative to the origin of the file</span>
+	SeekCurrent <span class="token operator">=</span> <span class="token number">1</span> <span class="token comment">// seek relative to the current offset</span>
+	SeekEnd     <span class="token operator">=</span> <span class="token number">2</span> <span class="token comment">// seek relative to the end</span>
+<span class="token punctuation">)</span></code></pre>
+
+<h2 id="断点续传-1"><a href="#断点续传-1" class="headerlink" title="断点续传"></a>断点续传</h2><p>首先思考几个问题<br>Q1：如果你要传的文件，比较大，那么是否有方法可以缩短耗时？<br>Q2：如果在文件传递过程中，程序因各种原因被迫中断了，那么下次再重启时，文件是否还需要重头开始？<br>Q3：传递文件的时候，支持暂停和恢复么？即使这两个操作分布在程序进程被杀前后。</p>
+<p>通过断点续传可以实现，不同的语言有不同的实现方式。我们看看Go语言中，通过Seek()方法如何实现：</p>
+<p>先说一下思路：想实现断点续传，主要就是记住上一次已经传递了多少数据，那我们可以创建一个临时文件，记录已经传递的数据量，当恢复传递的时候，先从临时文件中读取上次已经传递的数据量，然后通过Seek()方法，设置到该读和该写的位置，再继续传递数据。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	断点续传：
+		文件传递：文件复制
+			/Users/ruby/Documents/pro/a/guliang.jpeg
+
+		复制到
+			guliang4.jpeg
+
+	思路：
+		边复制，边记录复制的总量
+	 */</span>
+
+	srcFile <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/guliang.jpeg"</span>
+	destFile <span class="token operator">:=</span> <span class="token string">"guliang4.jpeg"</span>
+	tempFile <span class="token operator">:=</span> destFile <span class="token operator">+</span> <span class="token string">"temp.txt"</span>
+	<span class="token comment">//fmt.Println(tempFile)</span>
+	file1<span class="token punctuation">,</span> <span class="token boolean">_</span><span class="token punctuation">:</span> <span class="token operator">=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>srcFile<span class="token punctuation">)</span>
+	file2<span class="token punctuation">,</span> <span class="token boolean">_</span><span class="token punctuation">:</span> <span class="token operator">=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>destFile<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_CREATE <span class="token operator">|</span> os<span class="token punctuation">.</span>O_WRONLY<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	file3<span class="token punctuation">,</span> <span class="token boolean">_</span><span class="token punctuation">:</span> <span class="token operator">=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>tempFile<span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_CREATE <span class="token operator">|</span> os<span class="token punctuation">.</span>O_RDWR<span class="token punctuation">,</span> os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+
+
+	<span class="token keyword">defer</span> file1<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token keyword">defer</span> file2<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token comment">//1.读取临时文件中的数据，根据seek</span>
+	file3<span class="token punctuation">.</span><span class="token function">Seek</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> io<span class="token punctuation">.</span>SeekStart<span class="token punctuation">)</span>
+	bs <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span>
+	n1<span class="token punctuation">,</span> err <span class="token operator">:=</span> file3<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>bs<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n1<span class="token punctuation">)</span>
+	countStr <span class="token operator">:=</span> <span class="token function">string</span><span class="token punctuation">(</span>bs<span class="token punctuation">[</span><span class="token punctuation">:</span>n1<span class="token punctuation">]</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>countStr<span class="token punctuation">)</span>
+	<span class="token comment">//count, _ := strconv.Atoi(countStr)</span>
+	count<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">:=</span> strconv<span class="token punctuation">.</span><span class="token function">ParseInt</span><span class="token punctuation">(</span>countStr<span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">64</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span>
+
+	<span class="token comment">//2. 设置读，写的偏移量</span>
+	file1<span class="token punctuation">.</span><span class="token function">Seek</span><span class="token punctuation">(</span>count<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+	file2<span class="token punctuation">.</span><span class="token function">Seek</span><span class="token punctuation">(</span>count<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+	data <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token number">1024</span><span class="token punctuation">,</span> <span class="token number">1024</span><span class="token punctuation">)</span>
+	n2 <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token comment">// 读取的数据量</span>
+	n3 <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token comment">//写出的数据量</span>
+	total <span class="token operator">:=</span> <span class="token function">int</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token comment">//读取的总量</span>
+
+	<span class="token keyword">for</span><span class="token punctuation">&#123;</span>
+		<span class="token comment">//3.读取数据</span>
+		n2<span class="token punctuation">,</span> err <span class="token operator">=</span> file1<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> err <span class="token operator">==</span> io<span class="token punctuation">.</span>EOF<span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"文件复制完毕。。"</span><span class="token punctuation">)</span>
+			file3<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+			os<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span>tempFile<span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token comment">//将数据写入到目标文件</span>
+		n3<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">=</span> file2<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>data<span class="token punctuation">[</span><span class="token punctuation">:</span>n2<span class="token punctuation">]</span><span class="token punctuation">)</span>
+		total <span class="token operator">+=</span> n3
+		<span class="token comment">//将复制总量，存储到临时文件中</span>
+		file3<span class="token punctuation">.</span><span class="token function">Seek</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> io<span class="token punctuation">.</span>SeekStart<span class="token punctuation">)</span>
+		file3<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span>strconv<span class="token punctuation">.</span><span class="token function">Itoa</span><span class="token punctuation">(</span>total<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+
+		<span class="token comment">//假装断电</span>
+		<span class="token comment">//if total>8000&#123;</span>
+		<span class="token comment">//	panic("假装断电了。。。，假装的。。。")</span>
+		<span class="token comment">//&#125;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="bufio包"><a href="#bufio包" class="headerlink" title="bufio包"></a>bufio包</h1><p>生命不止，继续Go go go。。</p>
+<p>Go语言在io操作中，还提供了一个bufio的包，使用这个包可以大幅提高文件读写的效率。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>bufio 是通过缓冲来提高效率。</p>
+<p>io操作本身的效率并不低，低的是频繁的访问本地磁盘的文件。所以bufio就提供了缓冲区(分配一块内存)，读和写都先在缓冲区中，最后再读写文件，来降低访问本地磁盘的次数，从而提高效率。</p>
+<p>简单的说就是，把文件读取进缓冲（内存）之后再读取的时候就可以避免文件系统的io 从而提高速度。同理，在进行写操作时，先把文件写入缓冲（内存），然后由缓冲写入文件系统。看完以上解释有人可能会表示困惑了，直接把 内容-&gt;文件 和 内容-&gt;缓冲-&gt;文件相比， 缓冲区好像没有起到作用嘛。其实缓冲区的设计是为了存储多次的写入，最后一口气把缓冲区内容写入文件。bufio 封装了io.Reader或io.Writer接口对象，并创建另一个也实现了该接口的对象。io.Reader或io.Writer 接口实现read() 和 write() 方法，对于实现这个接口的对象都是可以使用这两个方法的。</p>
+<p>Reader对象</p>
+<p>bufio.Reader 是bufio中对io.Reader 的封装</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Reader implements buffering for an io.Reader object.</span>
+<span class="token keyword">type</span> Reader <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+	buf          <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span>
+	rd           io<span class="token punctuation">.</span>Reader <span class="token comment">// reader provided by the client</span>
+	r<span class="token punctuation">,</span> w         <span class="token builtin">int</span>       <span class="token comment">// buf read and write positions</span>
+	err          <span class="token builtin">error</span>
+	lastByte     <span class="token builtin">int</span> <span class="token comment">// last byte read for UnreadByte; -1 means invalid</span>
+	lastRuneSize <span class="token builtin">int</span> <span class="token comment">// size of last rune read for UnreadRune; -1 means invalid</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>bufio.Read(p []byte) 相当于读取大小len(p)的内容，思路如下：</p>
+<ol>
+<li>当缓存区有内容的时，将缓存区内容全部填入p并清空缓存区</li>
+<li>当缓存区没有内容的时候且len(p)&gt;len(buf),即要读取的内容比缓存区还要大，直接去文件读取即可</li>
+<li>当缓存区没有内容的时候且len(p)&lt;len(buf),即要读取的内容比缓存区小，缓存区从文件读取内容充满缓存区，并将p填满（此时缓存区有剩余内容）</li>
+<li>以后再次读取时缓存区有内容，将缓存区内容全部填入p并清空缓存区（此时和情况1一样）</li>
+</ol>
+<p>源码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Read reads data into p.</span>
+<span class="token comment">// It returns the number of bytes read into p.</span>
+<span class="token comment">// The bytes are taken from at most one Read on the underlying Reader,</span>
+<span class="token comment">// hence n may be less than len(p).</span>
+<span class="token comment">// To read exactly len(p) bytes, use io.ReadFull(b, p).</span>
+<span class="token comment">// At EOF, the count will be zero and err will be io.EOF.</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">Read</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	n <span class="token operator">=</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> n <span class="token operator">==</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> b<span class="token punctuation">.</span><span class="token function">readErr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">if</span> b<span class="token punctuation">.</span>r <span class="token operator">==</span> b<span class="token punctuation">.</span>w <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> b<span class="token punctuation">.</span>err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> b<span class="token punctuation">.</span><span class="token function">readErr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token operator">>=</span> <span class="token function">len</span><span class="token punctuation">(</span>b<span class="token punctuation">.</span>buf<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Large read, empty buffer.</span>
+			<span class="token comment">// Read directly into p to avoid copy.</span>
+			n<span class="token punctuation">,</span> b<span class="token punctuation">.</span>err <span class="token operator">=</span> b<span class="token punctuation">.</span>rd<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+			<span class="token keyword">if</span> n <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+				<span class="token function">panic</span><span class="token punctuation">(</span>errNegativeRead<span class="token punctuation">)</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">if</span> n <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+				b<span class="token punctuation">.</span>lastByte <span class="token operator">=</span> <span class="token function">int</span><span class="token punctuation">(</span>p<span class="token punctuation">[</span>n<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+				b<span class="token punctuation">.</span>lastRuneSize <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">return</span> n<span class="token punctuation">,</span> b<span class="token punctuation">.</span><span class="token function">readErr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token comment">// One read.</span>
+		<span class="token comment">// Do not use b.fill, which will loop.</span>
+		b<span class="token punctuation">.</span>r <span class="token operator">=</span> <span class="token number">0</span>
+		b<span class="token punctuation">.</span>w <span class="token operator">=</span> <span class="token number">0</span>
+		n<span class="token punctuation">,</span> b<span class="token punctuation">.</span>err <span class="token operator">=</span> b<span class="token punctuation">.</span>rd<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>b<span class="token punctuation">.</span>buf<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> n <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+			<span class="token function">panic</span><span class="token punctuation">(</span>errNegativeRead<span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> n <span class="token operator">==</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> b<span class="token punctuation">.</span><span class="token function">readErr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+		b<span class="token punctuation">.</span>w <span class="token operator">+=</span> n
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token comment">// copy as much as we can</span>
+	n <span class="token operator">=</span> <span class="token function">copy</span><span class="token punctuation">(</span>p<span class="token punctuation">,</span> b<span class="token punctuation">.</span>buf<span class="token punctuation">[</span>b<span class="token punctuation">.</span>r<span class="token punctuation">:</span>b<span class="token punctuation">.</span>w<span class="token punctuation">]</span><span class="token punctuation">)</span>
+	b<span class="token punctuation">.</span>r <span class="token operator">+=</span> n
+	b<span class="token punctuation">.</span>lastByte <span class="token operator">=</span> <span class="token function">int</span><span class="token punctuation">(</span>b<span class="token punctuation">.</span>buf<span class="token punctuation">[</span>b<span class="token punctuation">.</span>r<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+	b<span class="token punctuation">.</span>lastRuneSize <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span>
+	<span class="token keyword">return</span> n<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>说明：</p>
+<p>reader内部通过维护一个r, w 即读入和写入的位置索引来判断是否缓存区内容被全部读出。</p>
+<p>Writer对象</p>
+<p>bufio.Writer 是bufio中对io.Writer 的封装</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Writer implements buffering for an io.Writer object.</span>
+<span class="token comment">// If an error occurs writing to a Writer, no more data will be</span>
+<span class="token comment">// accepted and all subsequent writes, and Flush, will return the error.</span>
+<span class="token comment">// After all data has been written, the client should call the</span>
+<span class="token comment">// Flush method to guarantee all data has been forwarded to</span>
+<span class="token comment">// the underlying io.Writer.</span>
+<span class="token keyword">type</span> Writer <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+	err <span class="token builtin">error</span>
+	buf <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span>
+	n   <span class="token builtin">int</span>
+	wr  io<span class="token punctuation">.</span>Writer
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>bufio.Write(p []byte) 的思路如下</p>
+<ol>
+<li>判断buf中可用容量是否可以放下 p</li>
+<li>如果能放下，直接把p拼接到buf后面，即把内容放到缓冲区</li>
+<li>如果缓冲区的可用容量不足以放下，且此时缓冲区是空的，直接把p写入文件即可</li>
+<li>如果缓冲区的可用容量不足以放下，且此时缓冲区有内容，则用p把缓冲区填满，把缓冲区所有内容写入文件，并清空缓冲区</li>
+<li>判断p的剩余内容大小能否放到缓冲区，如果能放下（此时和步骤1情况一样）则把内容放到缓冲区</li>
+<li>如果p的剩余内容依旧大于缓冲区，（注意此时缓冲区是空的，情况和步骤3一样）则把p的剩余内容直接写入文件</li>
+</ol>
+<p>以下是源码</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Write writes the contents of p into the buffer.</span>
+<span class="token comment">// It returns the number of bytes written.</span>
+<span class="token comment">// If nn &lt; len(p), it also returns an error explaining</span>
+<span class="token comment">// why the write is short.</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">Write</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>nn <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">for</span> <span class="token function">len</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token operator">></span> b<span class="token punctuation">.</span><span class="token function">Available</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> b<span class="token punctuation">.</span>err <span class="token operator">==</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">var</span> n <span class="token builtin">int</span>
+		<span class="token keyword">if</span> b<span class="token punctuation">.</span><span class="token function">Buffered</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Large write, empty buffer.</span>
+			<span class="token comment">// Write directly from p to avoid copy.</span>
+			n<span class="token punctuation">,</span> b<span class="token punctuation">.</span>err <span class="token operator">=</span> b<span class="token punctuation">.</span>wr<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			n <span class="token operator">=</span> <span class="token function">copy</span><span class="token punctuation">(</span>b<span class="token punctuation">.</span>buf<span class="token punctuation">[</span>b<span class="token punctuation">.</span>n<span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">,</span> p<span class="token punctuation">)</span>
+			b<span class="token punctuation">.</span>n <span class="token operator">+=</span> n
+			b<span class="token punctuation">.</span><span class="token function">Flush</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+		nn <span class="token operator">+=</span> n
+		p <span class="token operator">=</span> p<span class="token punctuation">[</span>n<span class="token punctuation">:</span><span class="token punctuation">]</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">if</span> b<span class="token punctuation">.</span>err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> nn<span class="token punctuation">,</span> b<span class="token punctuation">.</span>err
+	<span class="token punctuation">&#125;</span>
+	n <span class="token operator">:=</span> <span class="token function">copy</span><span class="token punctuation">(</span>b<span class="token punctuation">.</span>buf<span class="token punctuation">[</span>b<span class="token punctuation">.</span>n<span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">,</span> p<span class="token punctuation">)</span>
+	b<span class="token punctuation">.</span>n <span class="token operator">+=</span> n
+	nn <span class="token operator">+=</span> n
+	<span class="token keyword">return</span> nn<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>说明：</p>
+<p><code>b.wr</code> 存储的是一个<code>io.writer</code>对象，实现了<code>Write()</code>的接口，所以可以使用<code>b.wr.Write(p)</code> 将p的内容写入文件。</p>
+<p><code>b.flush()</code> 会将缓存区内容写入文件，当所有写入完成后，因为缓存区会存储内容，所以需要手动<code>flush()</code>到文件。</p>
+<p><code>b.Available()</code> 为<code>buf</code>可用容量，等于<code>len(buf) - n</code>。</p>
+<h2 id="bufio包-1"><a href="#bufio包-1" class="headerlink" title="bufio包"></a>bufio包</h2><p>bufio包实现了有缓冲的I/O。它包装一个<code>io.Reader</code>或<code>io.Writer</code>接口对象，创建另一个也实现了该接口，且同时还提供了缓冲和一些文本I/O的帮助函数的对象。</p>
+<p>bufio.Reader 实现了如下接口：<br><code>io.Reader</code><br><code>io.WriterTo</code><br><code>io.ByteScanner</code><br><code>io.RuneScanner</code></p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// NewReaderSize 将 rd 封装成一个带缓存的 bufio.Reader 对象，</span>
+<span class="token comment">// 缓存大小由 size 指定（如果小于 16 则会被设置为 16）。</span>
+<span class="token comment">// 如果 rd 的基类型就是有足够缓存的 bufio.Reader 类型，则直接将</span>
+<span class="token comment">// rd 转换为基类型返回。</span>
+<span class="token keyword">func</span> <span class="token function">NewReaderSize</span><span class="token punctuation">(</span>rd io<span class="token punctuation">.</span>Reader<span class="token punctuation">,</span> size <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token operator">*</span>Reader
+
+<span class="token comment">// NewReader 相当于 NewReaderSize(rd, 4096)</span>
+<span class="token keyword">func</span> <span class="token function">NewReader</span><span class="token punctuation">(</span>rd io<span class="token punctuation">.</span>Reader<span class="token punctuation">)</span> <span class="token operator">*</span>Reader
+
+<span class="token comment">// Peek 返回缓存的一个切片，该切片引用缓存中前 n 个字节的数据，</span>
+<span class="token comment">// 该操作不会将数据读出，只是引用，引用的数据在下一次读取操作之</span>
+<span class="token comment">// 前是有效的。如果切片长度小于 n，则返回一个错误信息说明原因。</span>
+<span class="token comment">// 如果 n 大于缓存的总大小，则返回 ErrBufferFull。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">Peek</span><span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// Read 从 b 中读出数据到 p 中，返回读出的字节数和遇到的错误。</span>
+<span class="token comment">// 如果缓存不为空，则只能读出缓存中的数据，不会从底层 io.Reader</span>
+<span class="token comment">// 中提取数据，如果缓存为空，则：</span>
+<span class="token comment">// 1、len(p) >= 缓存大小，则跳过缓存，直接从底层 io.Reader 中读</span>
+<span class="token comment">// 出到 p 中。</span>
+<span class="token comment">// 2、len(p) &lt; 缓存大小，则先将数据从底层 io.Reader 中读取到缓存</span>
+<span class="token comment">// 中，再从缓存读取到 p 中。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">Read</span><span class="token punctuation">(</span>p <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>n <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// Buffered 返回缓存中未读取的数据的长度。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">Buffered</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">int</span>
+
+<span class="token comment">// ReadBytes 功能同 ReadSlice，只不过返回的是缓存的拷贝。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">ReadBytes</span><span class="token punctuation">(</span>delim <span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>line <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// ReadString 功能同 ReadBytes，只不过返回的是字符串。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Reader<span class="token punctuation">)</span> <span class="token function">ReadString</span><span class="token punctuation">(</span>delim <span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>line <span class="token builtin">string</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token operator">...</span></code></pre>
+
+<p>bufio.Writer 实现了如下接口：<br><code>io.Writer</code><br><code>io.ReaderFrom</code><br><code>io.ByteWriter</code></p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// NewWriterSize 将 wr 封装成一个带缓存的 bufio.Writer 对象，</span>
+<span class="token comment">// 缓存大小由 size 指定（如果小于 4096 则会被设置为 4096）。</span>
+<span class="token comment">// 如果 wr 的基类型就是有足够缓存的 bufio.Writer 类型，则直接将</span>
+<span class="token comment">// wr 转换为基类型返回。</span>
+<span class="token keyword">func</span> <span class="token function">NewWriterSize</span><span class="token punctuation">(</span>wr io<span class="token punctuation">.</span>Writer<span class="token punctuation">,</span> size <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token operator">*</span>Writer
+
+<span class="token comment">// NewWriter 相当于 NewWriterSize(wr, 4096)</span>
+<span class="token keyword">func</span> <span class="token function">NewWriter</span><span class="token punctuation">(</span>wr io<span class="token punctuation">.</span>Writer<span class="token punctuation">)</span> <span class="token operator">*</span>Writer
+
+<span class="token comment">// WriteString 功能同 Write，只不过写入的是字符串</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">WriteString</span><span class="token punctuation">(</span>s <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// WriteRune 向 b 写入 r 的 UTF-8 编码，返回 r 的编码长度。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">WriteRune</span><span class="token punctuation">(</span>r <span class="token builtin">rune</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>size <span class="token builtin">int</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// Flush 将缓存中的数据提交到底层的 io.Writer 中</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">Flush</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+
+<span class="token comment">// Available 返回缓存中未使用的空间的长度</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">Available</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">int</span>
+
+<span class="token comment">// Buffered 返回缓存中未提交的数据的长度</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">Buffered</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">int</span>
+
+<span class="token comment">// Reset 将 b 的底层 Writer 重新指定为 w，同时丢弃缓存中的所有数据，复位</span>
+<span class="token comment">// 所有标记和错误信息。相当于创建了一个新的 bufio.Writer。</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>b <span class="token operator">*</span>Writer<span class="token punctuation">)</span> <span class="token function">Reset</span><span class="token punctuation">(</span>w io<span class="token punctuation">.</span>Writer<span class="token punctuation">)</span>
+
+<span class="token operator">...</span></code></pre>
+
+<h2 id="实例代码-1"><a href="#实例代码-1" class="headerlink" title="实例代码"></a>实例代码</h2><p>读取数据：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"os"</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"bufio"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	bufio:高效io读写
+		buffer缓存
+		io：input/output
+
+	将io包下的Reader，Write对象进行包装，带缓存的包装，提高读写的效率
+
+		ReadBytes()
+		ReadString()
+		ReadLine()
+
+	 */</span>
+
+	 fileName <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/english.txt"</span>
+	 file<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span>fileName<span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span>
+	 <span class="token punctuation">&#125;</span>
+	 <span class="token keyword">defer</span> file<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	 <span class="token comment">//创建Reader对象</span>
+	 b1 <span class="token operator">:=</span> bufio<span class="token punctuation">.</span><span class="token function">NewReader</span><span class="token punctuation">(</span>file<span class="token punctuation">)</span>
+	 <span class="token comment">//高效读取</span>
+	 p <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span><span class="token number">1024</span><span class="token punctuation">)</span>
+	 n1<span class="token punctuation">,</span> err <span class="token operator">:=</span> b1<span class="token punctuation">.</span><span class="token function">Read</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n1<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">string</span><span class="token punctuation">(</span>p<span class="token punctuation">[</span><span class="token punctuation">:</span>n1<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	 data<span class="token punctuation">,</span> flag<span class="token punctuation">,</span> err <span class="token operator">:=</span> b1<span class="token punctuation">.</span><span class="token function">ReadLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>flag<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">string</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	 <span class="token comment">//3.ReadString()</span>
+	 s1<span class="token punctuation">,</span> err <span class="token operator">:=</span>b1<span class="token punctuation">.</span><span class="token function">ReadString</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s1<span class="token punctuation">)</span>
+
+	 s1<span class="token punctuation">,</span> err <span class="token operator">=</span> b1<span class="token punctuation">.</span><span class="token function">ReadString</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s1<span class="token punctuation">)</span>
+
+	 s1<span class="token punctuation">,</span> err <span class="token operator">=</span> b1<span class="token punctuation">.</span><span class="token function">ReadString</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s1<span class="token punctuation">)</span>
+
+	 <span class="token keyword">for</span><span class="token punctuation">&#123;</span>
+		s1<span class="token punctuation">,</span> err <span class="token operator">:=</span> b1<span class="token punctuation">.</span><span class="token function">ReadString</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+		<span class="token keyword">if</span> err <span class="token operator">==</span> io<span class="token punctuation">.</span>EOF <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"读取完毕。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s1<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+
+	data<span class="token punctuation">,</span> err <span class="token operator">:=</span> b1<span class="token punctuation">.</span><span class="token function">ReadBytes</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">string</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	s2 <span class="token operator">:=</span> <span class="token string">""</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Scanln</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>s2<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s2<span class="token punctuation">)</span>
+
+	b2 <span class="token operator">:=</span> bufio<span class="token punctuation">.</span><span class="token function">NewReader</span><span class="token punctuation">(</span>os<span class="token punctuation">.</span>Stdin<span class="token punctuation">)</span>
+	s2<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">:=</span> b2<span class="token punctuation">.</span><span class="token function">ReadString</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s2<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>本地文件：english.txt文件。</p>
+<p>写数据示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"os"</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"bufio"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	bufio:高效io读写
+		buffer缓存
+		io：input/output
+
+	将io包下的Reader，Write对象进行包装，带缓存的包装，提高读写的效率
+
+		func (b *Writer) Write(p []byte) (nn int, err error)
+		func (b *Writer) WriteByte(c byte) error
+		func (b *Writer) WriteRune(r rune) (size int, err error)
+		func (b *Writer) WriteString(s string) (int, error)
+
+	 */</span>
+
+	 fileName <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/cc.txt"</span>
+	 file<span class="token punctuation">,</span>err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span>fileName<span class="token punctuation">,</span>os<span class="token punctuation">.</span>O_CREATE<span class="token operator">|</span>os<span class="token punctuation">.</span>O_WRONLY<span class="token punctuation">,</span>os<span class="token punctuation">.</span>ModePerm<span class="token punctuation">)</span>
+	 <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span><span class="token punctuation">&#123;</span>
+	 	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	 	<span class="token keyword">return</span>
+	 <span class="token punctuation">&#125;</span>
+	 <span class="token keyword">defer</span> file<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	 w1 <span class="token operator">:=</span> bufio<span class="token punctuation">.</span><span class="token function">NewWriter</span><span class="token punctuation">(</span>file<span class="token punctuation">)</span>
+	 <span class="token comment">//n, err := w1.WriteString("helloworld")</span>
+	 <span class="token comment">//fmt.Println(err)</span>
+	 <span class="token comment">//fmt.Println(n)</span>
+	 <span class="token comment">//w1.Flush() //刷新缓冲区</span>
+
+	 <span class="token keyword">for</span> i<span class="token operator">:=</span><span class="token number">1</span><span class="token punctuation">;</span>i<span class="token operator">&lt;=</span><span class="token number">1000</span><span class="token punctuation">;</span>i<span class="token operator">++</span><span class="token punctuation">&#123;</span>
+	 	w1<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span>fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">"%d:hello"</span><span class="token punctuation">,</span> i<span class="token punctuation">)</span><span class="token punctuation">)</span>
+	 <span class="token punctuation">&#125;</span>
+	 w1<span class="token punctuation">.</span><span class="token function">Flush</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="ioutil包"><a href="#ioutil包" class="headerlink" title="ioutil包"></a>ioutil包</h1><p>除了io包可以读写数据，Go语言中还提供了一个辅助的工具包就是ioutil，里面的方法虽然不多，但是都还蛮好用的。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">import</span> <span class="token string">"io/ioutil"</span></code></pre>
+
+<p>该包的介绍只有一句话：Package ioutil implements some I/O utility functions。</p>
+<h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><p>下面我们来看一下里面的方法：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Discard 是一个 io.Writer 接口，调用它的 Write 方法将不做任何事情</span>
+<span class="token comment">// 并且始终成功返回。</span>
+<span class="token keyword">var</span> Discard io<span class="token punctuation">.</span>Writer <span class="token operator">=</span> <span class="token function">devNull</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token comment">// ReadAll 读取 r 中的所有数据，返回读取的数据和遇到的错误。</span>
+<span class="token comment">// 如果读取成功，则 err 返回 nil，而不是 EOF，因为 ReadAll 定义为读取</span>
+<span class="token comment">// 所有数据，所以不会把 EOF 当做错误处理。</span>
+<span class="token keyword">func</span> <span class="token function">ReadAll</span><span class="token punctuation">(</span>r io<span class="token punctuation">.</span>Reader<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// ReadFile 读取文件中的所有数据，返回读取的数据和遇到的错误。</span>
+<span class="token comment">// 如果读取成功，则 err 返回 nil，而不是 EOF</span>
+<span class="token keyword">func</span> <span class="token function">ReadFile</span><span class="token punctuation">(</span>filename <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// WriteFile 向文件中写入数据，写入前会清空文件。</span>
+<span class="token comment">// 如果文件不存在，则会以指定的权限创建该文件。</span>
+<span class="token comment">// 返回遇到的错误。</span>
+<span class="token keyword">func</span> <span class="token function">WriteFile</span><span class="token punctuation">(</span>filename <span class="token builtin">string</span><span class="token punctuation">,</span> data <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> perm os<span class="token punctuation">.</span>FileMode<span class="token punctuation">)</span> <span class="token builtin">error</span>
+
+<span class="token comment">// ReadDir 读取指定目录中的所有目录和文件（不包括子目录）。</span>
+<span class="token comment">// 返回读取到的文件信息列表和遇到的错误，列表是经过排序的。</span>
+<span class="token keyword">func</span> <span class="token function">ReadDir</span><span class="token punctuation">(</span>dirname <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span>os<span class="token punctuation">.</span>FileInfo<span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// NopCloser 将 r 包装为一个 ReadCloser 类型，但 Close 方法不做任何事情。</span>
+<span class="token keyword">func</span> <span class="token function">NopCloser</span><span class="token punctuation">(</span>r io<span class="token punctuation">.</span>Reader<span class="token punctuation">)</span> io<span class="token punctuation">.</span>ReadCloser
+
+<span class="token comment">// TempFile 在 dir 目录中创建一个以 prefix 为前缀的临时文件，并将其以读</span>
+<span class="token comment">// 写模式打开。返回创建的文件对象和遇到的错误。</span>
+<span class="token comment">// 如果 dir 为空，则在默认的临时目录中创建文件（参见 os.TempDir），多次</span>
+<span class="token comment">// 调用会创建不同的临时文件，调用者可以通过 f.Name() 获取文件的完整路径。</span>
+<span class="token comment">// 调用本函数所创建的临时文件，应该由调用者自己删除。</span>
+<span class="token keyword">func</span> <span class="token function">TempFile</span><span class="token punctuation">(</span>dir<span class="token punctuation">,</span> prefix <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>f <span class="token operator">*</span>os<span class="token punctuation">.</span>File<span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span>
+
+<span class="token comment">// TempDir 功能同 TempFile，只不过创建的是目录，返回目录的完整路径。</span>
+<span class="token keyword">func</span> <span class="token function">TempDir</span><span class="token punctuation">(</span>dir<span class="token punctuation">,</span> prefix <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span></code></pre>
+
+<h2 id="示例代码-1"><a href="#示例代码-1" class="headerlink" title="示例代码"></a>示例代码</h2><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"io/ioutil"</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"os"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	ioutil包：
+		ReadFile()
+		WriteFile()
+		ReadDir()
+		..
+	 */</span>
+
+	<span class="token comment">//1.读取文件中的所有的数据</span>
+	fileName1 <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/aa.txt"</span>
+	data<span class="token punctuation">,</span> err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">ReadFile</span><span class="token punctuation">(</span>fileName1<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">string</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//2.写出数据</span>
+	fileName2 <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a/bbb.txt"</span>
+	s1 <span class="token operator">:=</span> <span class="token string">"helloworld面朝大海春暖花开"</span>
+	err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">WriteFile</span><span class="token punctuation">(</span>fileName2<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token function">byte</span><span class="token punctuation">(</span>s1<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0777</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+
+	s2 <span class="token operator">:=</span> <span class="token string">"qwertyuiopsdfghjklzxcvbnm"</span>
+	r1 <span class="token operator">:=</span> strings<span class="token punctuation">.</span><span class="token function">NewReader</span><span class="token punctuation">(</span>s2<span class="token punctuation">)</span>
+	data<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">ReadAll</span><span class="token punctuation">(</span>r1<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+
+	<span class="token comment">//4.ReadDir(),读取一个目录下的子内容：子文件和子目录，但是仅有一层</span>
+	dirName <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro/a"</span>
+	fileInfos<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">ReadDir</span><span class="token punctuation">(</span>dirName<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">len</span><span class="token punctuation">(</span>fileInfos<span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token function">len</span><span class="token punctuation">(</span>fileInfos<span class="token punctuation">)</span><span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//fmt.Printf("%T\n",fileInfos[i])</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> fileInfos<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> fileInfos<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">IsDir</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token comment">// 5.创建临时目录</span>
+	dir<span class="token punctuation">,</span> err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">TempDir</span><span class="token punctuation">(</span><span class="token string">"/Users/ruby/Documents/pro/a"</span><span class="token punctuation">,</span> <span class="token string">"Test"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">defer</span> os<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span>dir<span class="token punctuation">)</span> <span class="token comment">// 用完删除</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> dir<span class="token punctuation">)</span>
+
+	<span class="token comment">// 创建临时文件</span>
+	f<span class="token punctuation">,</span> err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">TempFile</span><span class="token punctuation">(</span>dir<span class="token punctuation">,</span> <span class="token string">"Test"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">defer</span> os<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span>f<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 用完删除</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> f<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="遍历文件夹"><a href="#遍历文件夹" class="headerlink" title="遍历文件夹"></a>遍历文件夹</h1><p>学习io之后，尤其是文件操作，我们就可以遍历给定的目录文件夹了。可以使用ioutil包下的readDir()方法，这个方法可以获取指定目录下的内容，返回文件和子目录。因为文件夹下还有子文件夹，而ioutil包的ReadDir()只能获取一层目录，所以我们需要自己去设计算法来实现，最容易实现的思路就是使用递归。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"io/ioutil"</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"log"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/**
+	遍历文件夹：
+	 */</span>
+
+	dirname <span class="token operator">:=</span> <span class="token string">"/Users/ruby/Documents/pro"</span>
+	<span class="token function">listFiles</span><span class="token punctuation">(</span>dirname<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">listFiles</span><span class="token punctuation">(</span>dirname <span class="token builtin">string</span><span class="token punctuation">,</span> level <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">// level用来记录当前递归的层次</span>
+	<span class="token comment">// 生成有层次感的空格</span>
+	s <span class="token operator">:=</span> <span class="token string">"|--"</span>
+	<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> level<span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+		s <span class="token operator">=</span> <span class="token string">"|   "</span> <span class="token operator">+</span> s
+	<span class="token punctuation">&#125;</span>
+
+	fileInfos<span class="token punctuation">,</span> err <span class="token operator">:=</span> ioutil<span class="token punctuation">.</span><span class="token function">ReadDir</span><span class="token punctuation">(</span>dirname<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span><span class="token punctuation">&#123;</span>
+		log<span class="token punctuation">.</span><span class="token function">Fatal</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">for</span> <span class="token boolean">_</span><span class="token punctuation">,</span> fi <span class="token operator">:=</span> <span class="token keyword">range</span> fileInfos <span class="token punctuation">&#123;</span>
+		filename <span class="token operator">:=</span> dirname <span class="token operator">+</span> <span class="token string">"/"</span> <span class="token operator">+</span> fi<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"%s%s\n"</span><span class="token punctuation">,</span> s<span class="token punctuation">,</span> filename<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> fi<span class="token punctuation">.</span><span class="token function">IsDir</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">//继续遍历fi这个目录</span>
+			<span class="token function">listFiles</span><span class="token punctuation">(</span>filename<span class="token punctuation">,</span> level <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>TAYNPG</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://taynpg.github.io/2021/05/07/golang-file-operation-07/" title="Go文件操作-07">https://taynpg.github.io/2021/05/07/golang-file-operation-07/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/2021/05/08/golang-erupt-simultaneously-08/" rel="prev" title="Go并发-08"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Go并发-08</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/2021/05/06/golang-method-interface-err-06/" rel="next" title="Go接口与错误处理-06"><span class="post-nav-text">Go接口与错误处理-06</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>要不要和我说些什么？</span><br></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> TAYNPG</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div><div class="live_time"><span>本博客已悄悄的地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2021-05-10T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a></div></body></html>

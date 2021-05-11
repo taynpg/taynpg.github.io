@@ -1,0 +1,519 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="TAYNPG"><meta name="copyright" content="TAYNPG"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Go并发-08 | 拐几个弯</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="icon" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"taynpg.github.io","root":"/","title":"土豆呀土豆","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><meta name="description" content="Go语言的并发模型。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go并发-08">
+<meta property="og:url" content="https://taynpg.github.io/2021/05/08/golang-erupt-simultaneously-08/index.html">
+<meta property="og:site_name" content="拐几个弯">
+<meta property="og:description" content="Go语言的并发模型。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-1.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-2.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-3.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-4.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-5.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-6.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-module-7.png">
+<meta property="og:image" content="https://taynpg.github.io/source/golang-goroutine.png">
+<meta property="article:published_time" content="2021-05-08T12:15:58.000Z">
+<meta property="article:modified_time" content="2021-05-11T03:37:08.319Z">
+<meta property="article:author" content="TAYNPG">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://taynpg.github.io/source/golang-module-1.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="TAYNPG"><img width="96" loading="lazy" src="/favicon.ico" alt="TAYNPG"></a><div class="site-author-name"><a href="/about/">TAYNPG</a></div><span class="site-name">拐几个弯</span><sub class="site-subtitle">RECORD SOMETING</sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">10</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://blog.csdn.net/Taynpg" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Go%E8%AF%AD%E8%A8%80%E7%9A%84%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">Go语言的并发模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.1.</span> <span class="toc-text">线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.2.</span> <span class="toc-text">内核级线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.3.</span> <span class="toc-text">用户级线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A4%E7%BA%A7%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.4.</span> <span class="toc-text">两级线程模型</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Go%E5%B9%B6%E5%8F%91%E8%B0%83%E5%BA%A6%EF%BC%9AG-P-M%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">Go并发调度：G-P-M模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84"><span class="toc-number">2.1.</span> <span class="toc-text">调度器如何工作的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E9%98%BB%E5%A1%9E"><span class="toc-number">2.2.</span> <span class="toc-text">线程阻塞</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#runquenue%E6%89%A7%E8%A1%8C%E5%AE%8C%E6%88%90"><span class="toc-number">2.3.</span> <span class="toc-text">runquenue执行完成</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#runtime%E5%8C%85"><span class="toc-number">3.</span> <span class="toc-text">runtime包</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0"><span class="toc-number">3.1.</span> <span class="toc-text">常用函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="toc-number">3.2.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%B4%E7%95%8C%E8%B5%84%E6%BA%90%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">临界资源安全问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%B4%E7%95%8C%E8%B5%84%E6%BA%90"><span class="toc-number">4.1.</span> <span class="toc-text">临界资源</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%B4%E7%95%8C%E8%B5%84%E6%BA%90%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98-1"><span class="toc-number">4.2.</span> <span class="toc-text">临界资源安全问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%B4%E7%95%8C%E8%B5%84%E6%BA%90%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3"><span class="toc-number">4.3.</span> <span class="toc-text">临界资源安全问题的解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#sync%E5%8C%85"><span class="toc-number">4.4.</span> <span class="toc-text">sync包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WaitGroup"><span class="toc-number">4.5.</span> <span class="toc-text">WaitGroup</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Add-%E6%96%B9%E6%B3%95"><span class="toc-number">4.5.1.</span> <span class="toc-text">Add()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Done-%E6%96%B9%E6%B3%95"><span class="toc-number">4.5.2.</span> <span class="toc-text">Done()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Wait-%E6%96%B9%E6%B3%95"><span class="toc-number">4.5.3.</span> <span class="toc-text">Wait()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81-1"><span class="toc-number">4.5.4.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Mutex-%E4%BA%92%E6%96%A5%E9%94%81"><span class="toc-number">4.6.</span> <span class="toc-text">Mutex(互斥锁)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Lock-%E6%96%B9%E6%B3%95%EF%BC%9A"><span class="toc-number">4.6.1.</span> <span class="toc-text">Lock()方法：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Unlock-%E6%96%B9%E6%B3%95"><span class="toc-number">4.6.2.</span> <span class="toc-text">Unlock()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81-2"><span class="toc-number">4.6.3.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RWMutex-%E8%AF%BB%E5%86%99%E9%94%81"><span class="toc-number">4.7.</span> <span class="toc-text">RWMutex(读写锁)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RLock-%E6%96%B9%E6%B3%95"><span class="toc-number">4.7.1.</span> <span class="toc-text">RLock()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RUnlock-%E6%96%B9%E6%B3%95"><span class="toc-number">4.7.2.</span> <span class="toc-text">RUnlock()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Lock-%E6%96%B9%E6%B3%95%EF%BC%9A-1"><span class="toc-number">4.7.3.</span> <span class="toc-text">Lock()方法：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Unlock-%E6%96%B9%E6%B3%95-1"><span class="toc-number">4.7.4.</span> <span class="toc-text">Unlock()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="toc-number">4.7.5.</span> <span class="toc-text">示例代码：</span></a></li></ol></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://taynpg.github.io/2021/05/08/golang-erupt-simultaneously-08/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="TAYNPG"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="拐几个弯"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Go并发-08</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-08 20:15:58" itemprop="dateCreated datePublished" datetime="2021-05-08T20:15:58+08:00">2021-05-08</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2021-05-11 11:37:08" itemprop="dateModified" datetime="2021-05-11T11:37:08+08:00">2021-05-11</time></div><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/Go%E8%AF%AD%E8%A8%80/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">Go语言</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/golang/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">golang</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h1 id="Go语言的并发模型"><a href="#Go语言的并发模型" class="headerlink" title="Go语言的并发模型"></a>Go语言的并发模型</h1><h2 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h2><p>在现代操作系统中，线程是处理器调度和分配的基本单位，进程则作为资源拥有的基本单位。每个进程是由私有的虚拟地址空间、代码、数据和其它各种系统资源组成。线程是进程内部的一个执行单元。 每一个进程至少有一个主执行线程，它无需由用户去主动创建，是由系统自动创建的。 用户根据需要在应用程序中创建其它线程，多个线程并发地运行于同一个进程中。</p>
+<p>我们先从线程讲起，无论语言层面何种并发模型，到了操作系统层面，一定是以线程的形态存在的。而操作系统根据资源访问权限的不同，体系架构可分为用户空间和内核空间；内核空间主要操作访问CPU资源、I/O资源、内存资源等硬件资源，为上层应用程序提供最基本的基础资源，用户空间呢就是上层应用程序的固定活动空间，用户空间不可以直接访问资源，必须通过“系统调用”、“库函数”或“Shell脚本”来调用内核空间提供的资源。</p>
+<p>我们现在的计算机语言，可以狭义的认为是一种“软件”，它们中所谓的“线程”，往往是用户态的线程，和操作系统本身内核态的线程（简称KSE），还是有区别的。Go并发编程模型在底层是由操作系统所提供的线程库支撑的，因此还是得从线程实现模型说起。</p>
+<p>线程可以视为进程中的控制流。一个进程至少会包含一个线程，因为其中至少会有一个控制流持续运行。因而，一个进程的第一个线程会随着这个进程的启动而创建，这个线程称为该进程的主线程。当然，一个进程也可以包含多个线程。这些线程都是由当前进程中已存在的线程创建出来的，创建的方法就是调用系统调用，更确切地说是调用pthread create函数。拥有多个线程的进程可以并发执行多个任务，并且即使某个或某些任务被阻塞，也不会影响其他任务正常执行，这可以大大改善程序的响应时间和吞吐量。另一方面，线程不可能独立于进程存在。它的生命周期不可能逾越其所属进程的生命周期。</p>
+<p>线程的实现模型主要有3个，分别是:用户级线程模型、内核级线程模型和两级线程模型。它们之间最大的差异就在于线程与内核调度实体( Kernel Scheduling Entity,简称<code>KSE)</code>之间的对应关系上。顾名思义，内核调度实体就是可以被内核的调度器调度的对象，在很多文献和书中，它也称为内核级线程，是操作系统内核的最小调度单元。</p>
+<h2 id="内核级线程模型"><a href="#内核级线程模型" class="headerlink" title="内核级线程模型"></a>内核级线程模型</h2><p>用户线程与KSE是1对1关系(1:1)。大部分编程语言的线程库(如linux的<code>pthread</code>，Java的<code>java.lang.Thread</code>，C++11的<code>std::thread</code>等等)都是对操作系统的线程（内核级线程）的一层封装，创建出来的每个线程与一个不同的KSE静态关联，因此其调度完全由OS调度器来做。这种方式实现简单，直接借助OS提供的线程能力，并且不同用户线程之间一般也不会相互影响。但其创建，销毁以及多个线程之间的上下文切换等操作都是直接由OS层面亲自来做，在需要使用大量线程的场景下对OS的性能影响会很大。</p>
+<p><img src="/source/golang-module-1.png" alt="moxing1" loading="lazy"></p>
+<p>每个线程由内核调度器独立的调度，所以如果一个线程阻塞则不影响其他的线程。</p>
+<p>优点：在多核处理器的硬件的支持下，内核空间线程模型支持了真正的并行，当一个线程被阻塞后，允许另一个线程继续执行，所以并发能力较强。</p>
+<p>缺点：每创建一个用户级线程都需要创建一个内核级线程与其对应，这样创建线程的开销比较大，会影响到应用程序的性能。</p>
+<h2 id="用户级线程模型"><a href="#用户级线程模型" class="headerlink" title="用户级线程模型"></a>用户级线程模型</h2><p>用户线程与KSE是多对1关系(M:1)，这种线程的创建，销毁以及多个线程之间的协调等操作都是由用户自己实现的线程库来负责，对OS内核透明，一个进程中所有创建的线程都与同一个KSE在运行时动态关联。现在有许多语言实现的 <strong>协程</strong> 基本上都属于这种方式。这种实现方式相比内核级线程可以做的很轻量级，对系统资源的消耗会小很多，因此可以创建的数量与上下文切换所花费的代价也会小得多。但该模型有个致命的缺点，如果我们在某个用户线程上调用阻塞式系统调用(如用阻塞方式read网络IO)，那么一旦KSE因阻塞被内核调度出CPU的话，剩下的所有对应的用户线程全都会变为阻塞状态（整个进程挂起）。<br>所以这些语言的<strong>协程库</strong>会把自己一些阻塞的操作重新封装为完全的非阻塞形式，然后在以前要阻塞的点上，主动让出自己，并通过某种方式通知或唤醒其他待执行的用户线程在该KSE上运行，从而避免了内核调度器由于KSE阻塞而做上下文切换，这样整个进程也不会被阻塞了。</p>
+<p><img src="/source/golang-module-2.png" alt="moxing2" loading="lazy"></p>
+<p>优点： 这种模型的好处是线程上下文切换都发生在用户空间，避免的模态切换（mode switch），从而对于性能有积极的影响。</p>
+<p>缺点：所有的线程基于一个内核调度实体即内核线程，这意味着只有一个处理器可以被利用，在多处理器环境下这是不能够被接受的，本质上，用户线程只解决了并发问题，但是没有解决并行问题。如果线程因为 I/O 操作陷入了内核态，内核态线程阻塞等待 I/O 数据，则所有的线程都将会被阻塞，用户空间也可以使用非阻塞而 I/O，但是不能避免性能及复杂度问题。</p>
+<h2 id="两级线程模型"><a href="#两级线程模型" class="headerlink" title="两级线程模型"></a>两级线程模型</h2><p>用户线程与KSE是多对多关系(M:N)，这种实现综合了前两种模型的优点，为一个进程中创建多个KSE，并且线程可以与不同的KSE在运行时进行动态关联，当某个KSE由于其上工作的线程的阻塞操作被内核调度出CPU时，当前与其关联的其余用户线程可以重新与其他KSE建立关联关系。当然这种动态关联机制的实现很复杂，也需要用户自己去实现，这算是它的一个缺点吧。Go语言中的并发就是使用的这种实现方式，Go为了实现该模型自己实现了一个运行时调度器来负责Go中的”线程”与KSE的动态关联。此模型有时也被称为 <strong>混合型线程模型</strong>，<strong>即用户调度器实现用户线程到KSE的“调度”，内核调度器实现KSE到CPU上的调度</strong>。</p>
+<p><img src="/source/golang-module-3.png" alt="moxing3" loading="lazy"></p>
+<h1 id="Go并发调度：G-P-M模型"><a href="#Go并发调度：G-P-M模型" class="headerlink" title="Go并发调度：G-P-M模型"></a>Go并发调度：G-P-M模型</h1><p>在操作系统提供的内核线程之上，Go搭建了一个特有的两级线程模型。goroutine机制实现了M : N的线程模型，goroutine机制是协程（coroutine）的一种实现，golang内置的调度器，可以让多核CPU中每个CPU执行一个协程。</p>
+<h2 id="调度器如何工作的"><a href="#调度器如何工作的" class="headerlink" title="调度器如何工作的"></a>调度器如何工作的</h2><p>有了上面的认识，我们可以开始真正的介绍Go的并发机制了，先用一段代码展示一下在Go语言中新建一个“线程”(Go语言中称为Goroutine)的样子：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// 用go关键字加上一个函数（这里用了匿名函数）</span>
+<span class="token comment">// 调用就做到了在一个新的“线程”并发执行任务</span>
+<span class="token keyword">go</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> 
+    <span class="token comment">// do something in one new goroutine</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p>功能上等价于Java8的代码:</p>
+<pre class="language-java" data-language="java"><code class="language-java"><span class="token keyword">new</span> <span class="token class-name"><span class="token namespace">java<span class="token punctuation">.</span>lang<span class="token punctuation">.</span></span>Thread</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-></span> <span class="token punctuation">&#123;</span> 
+    <span class="token comment">// do something in one new thread</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+
+<p>理解goroutine机制的原理，关键是理解Go语言scheduler的实现。</p>
+<p>Go语言中支撑整个scheduler实现的主要有4个重要结构，分别是M、G、P、Sched， 前三个定义在runtime.h中，Sched定义在proc.c中。</p>
+<ul>
+<li>Sched结构就是调度器，它维护有存储M和G的队列以及调度器的一些状态信息等。</li>
+<li>M结构是Machine，系统线程，它由操作系统管理的，goroutine就是跑在M之上的；M是一个很大的结构，里面维护小对象内存cache（mcache）、当前执行的goroutine、随机数发生器等等非常多的信息。</li>
+<li>P结构是Processor，处理器，它的主要用途就是用来执行goroutine的，它维护了一个goroutine队列，即runqueue。Processor是让我们从N:1调度到M:N调度的重要部分。</li>
+<li>G是goroutine实现的核心结构，它包含了栈，指令指针，以及其他对调度goroutine很重要的信息，例如其阻塞的channel。</li>
+</ul>
+<blockquote>
+<p>Processor的数量是在启动时被设置为环境变量GOMAXPROCS的值，或者通过运行时调用函数GOMAXPROCS()进行设置。Processor数量固定意味着任意时刻只有GOMAXPROCS个线程在运行go代码。</p>
+</blockquote>
+<p>我们分别用三角形，矩形和圆形表示Machine Processor和Goroutine。</p>
+<p><img src="/source/golang-module-4.png" alt="moxing4" loading="lazy"></p>
+<p>在单核处理器的场景下，所有goroutine运行在同一个M系统线程中，每一个M系统线程维护一个Processor，任何时刻，一个Processor中只有一个goroutine，其他goroutine在runqueue中等待。一个goroutine运行完自己的时间片后，让出上下文，回到runqueue中。 多核处理器的场景下，为了运行goroutines，每个M系统线程会持有一个Processor。</p>
+<p><img src="/source/golang-module-5.png" alt="moxing5" loading="lazy"></p>
+<p>在正常情况下，scheduler会按照上面的流程进行调度，但是线程会发生阻塞等情况，看一下goroutine对线程阻塞等的处理。</p>
+<h2 id="线程阻塞"><a href="#线程阻塞" class="headerlink" title="线程阻塞"></a>线程阻塞</h2><p>当正在运行的goroutine阻塞的时候，例如进行系统调用，会再创建一个系统线程（M1），当前的M线程放弃了它</p>
+<p>的Processor，P转到新的线程中去运行。</p>
+<p><img src="/source/golang-module-6.png" alt="moxing6" loading="lazy"></p>
+<h2 id="runquenue执行完成"><a href="#runquenue执行完成" class="headerlink" title="runquenue执行完成"></a>runquenue执行完成</h2><p>当其中一个Processor的runqueue为空，没有goroutine可以调度。它会从另外一个上下文偷取一半的goroutine。</p>
+<p><img src="/source/golang-module-7.png" alt="moxing7" loading="lazy"></p>
+<blockquote>
+<p>其图中的G，P和M都是Go语言运行时系统（其中包括内存分配器，并发调度器，垃圾收集器等组件，可以想象为Java中的JVM）抽象出来概念和数据结构对象：<br>G：Goroutine的简称，上面用go关键字加函数调用的代码就是创建了一个G对象，是对一个要并发执行的任务的封装，也可以称作用户态线程。属于用户级资源，对OS透明，具备轻量级，可以大量创建，上下文切换成本低等特点。<br>M：Machine的简称，在linux平台上是用clone系统调用创建的，其与用linux pthread库创建出来的线程本质上是一样的，都是利用系统调用创建出来的OS线程实体。M的作用就是执行G中包装的并发任务。<strong>Go运行时系统中的调度器的主要职责就是将G公平合理的安排到多个M上去执行</strong>。其属于OS资源，可创建的数量上也受限了OS，通常情况下G的数量都多于活跃的M的。<br>P：Processor的简称，逻辑处理器，主要作用是管理G对象（每个P都有一个G队列），并为G在M上的运行提供本地化资源。</p>
+</blockquote>
+<p>从两级线程模型来看，似乎并不需要P的参与，有G和M就可以了，那为什么要加入P这个东东呢？<br>其实Go语言运行时系统早期(Go1.0)的实现中并没有P的概念，Go中的调度器直接将G分配到合适的M上运行。但这样带来了很多问题，例如，不同的G在不同的M上并发运行时可能都需向系统申请资源（如堆内存），由于资源是全局的，将会由于资源竞争造成很多系统性能损耗，为了解决类似的问题，后面的Go（Go1.1）运行时系统加入了P，让P去管理G对象，M要想运行G必须先与一个P绑定，然后才能运行该P管理的G。这样带来的好处是，我们可以在P对象中预先申请一些系统资源（本地资源），G需要的时候先向自己的本地P申请（无需锁保护），如果不够用或没有再向全局申请，而且从全局拿的时候会多拿一部分，以供后面高效的使用。就像现在我们去政府办事情一样，先去本地政府看能搞定不，如果搞不定再去中央，从而提供办事效率。<br>而且由于P解耦了G和M对象，这样即使M由于被其上正在运行的G阻塞住，其余与该M关联的G也可以随着P一起迁移到别的活跃的M上继续运行，从而让G总能及时找到M并运行自己，从而提高系统的并发能力。<br>Go运行时系统通过构造G-P-M对象模型实现了一套用户态的并发调度系统，可以自己管理和调度自己的并发任务，所以可以说Go语言<strong>原生支持并发</strong>。<strong>自己实现的调度器负责将并发任务分配到不同的内核线程上运行，然后内核调度器接管内核线程在CPU上的执行与调度。</strong></p>
+<p>可以看到Go的并发用起来非常简单，用了一个语法糖将内部复杂的实现结结实实的包装了起来。其内部可以用下面这张图来概述：</p>
+<p><img src="/source/golang-goroutine.png" alt="goroutine" loading="lazy"></p>
+<p>写在最后，Go运行时完整的调度系统是很复杂，很难用一篇文章描述的清楚，这里只能从宏观上介绍一下，让大家有个整体的认识。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Goroutine1</span>
+<span class="token keyword">func</span> <span class="token function">task1</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">go</span> <span class="token function">task2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">go</span> <span class="token function">task3</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>假如我们有一个G(Goroutine1)已经通过P被安排到了一个M上正在执行，在Goroutine1执行的过程中我们又创建两个G，这两个G会被马上放入与Goroutine1相同的P的本地G任务队列中，排队等待与该P绑定的M的执行，这是最基本的结构，很好理解。 关键问题是:</p>
+<p><strong>a.如何在一个多核心系统上尽量合理分配G到多个M上运行，充分利用多核，提高并发能力呢？</strong></p>
+<p>如果我们在一个Goroutine中通过<strong>go</strong>关键字创建了大量G，这些G虽然暂时会被放在同一个队列, 但如果这时还有空闲P（系统内P的数量默认等于系统cpu核心数），Go运行时系统始终能保证至少有一个（通常也只有一个）活跃的M与空闲P绑定去各种G队列去寻找可运行的G任务，该种M称为<strong>自旋的M</strong>。一般寻找顺序为：自己绑定的P的队列，全局队列，然后其他P队列。如果自己P队列找到就拿出来开始运行，否则去全局队列看看，由于全局队列需要锁保护，如果里面有很多任务，会转移一批到本地P队列中，避免每次都去竞争锁。如果全局队列还是没有，就要开始玩狠的了，直接从其他P队列偷任务了（偷一半任务回来）。这样就保证了在还有可运行的G任务的情况下，总有与CPU核心数相等的M+P组合 在执行G任务或在执行G的路上(寻找G任务)。</p>
+<p><strong>b. 如果某个M在执行G的过程中被G中的系统调用阻塞了，怎么办？</strong></p>
+<p>在这种情况下，这个M将会被内核调度器调度出CPU并处于阻塞状态，与该M关联的其他G就没有办法继续执行了，但Go运行时系统的一个监控线程(sysmon线程)能探测到这样的M，并把与该M绑定的P剥离，寻找其他空闲或新建M接管该P，然后继续运行其中的G，大致过程如下图所示。然后等到该M从阻塞状态恢复，需要重新找一个空闲P来继续执行原来的G，如果这时系统正好没有空闲的P，就把原来的G放到全局队列当中，等待其他M+P组合发掘并执行。</p>
+<p><strong>c. 如果某一个G在M运行时间过长，有没有办法做抢占式调度，让该M上的其他G获得一定的运行时间，以保证调度系统的公平性?</strong></p>
+<p>我们知道linux的内核调度器主要是基于时间片和优先级做调度的。对于相同优先级的线程，内核调度器会尽量保证每个线程都能获得一定的执行时间。为了防止有些线程”饿死”的情况，内核调度器会发起抢占式调度将长期运行的线程中断并让出CPU资源，让其他线程获得执行机会。当然在Go的运行时调度器中也有类似的抢占机制，但并不能保证抢占能成功，因为Go运行时系统并没有内核调度器的中断能力，它只能通过向运行时间过长的G中设置抢占flag的方法温柔的让运行的G自己主动让出M的执行权。</p>
+<p>说到这里就不得不提一下Goroutine在运行过程中可以动态扩展自己线程栈的能力，可以从初始的2KB大小扩展到最大1G（64bit系统上），因此在每次调用函数之前需要先计算该函数调用需要的栈空间大小，然后按需扩展（超过最大值将导致运行时异常）。Go抢占式调度的机制就是利用在判断要不要扩栈的时候顺便查看以下自己的抢占flag，决定是否继续执行，还是让出自己。<br>运行时系统的监控线程会计时并设置抢占flag到运行时间过长的G，然后G在有函数调用的时候会检查该抢占flag，如果已设置就将自己放入全局队列，这样该M上关联的其他G就有机会执行了。但如果正在执行的G是个很耗时的操作且没有任何函数调用(如只是for循环中的计算操作)，即使抢占flag已经被设置，该G还是将一直霸占着当前M直到执行完自己的任务。</p>
+<h1 id="runtime包"><a href="#runtime包" class="headerlink" title="runtime包"></a>runtime包</h1><p>官网文档对runtime包的介绍：</p>
+<pre class="language-none"><code class="language-none">Package runtime contains operations that interact with Go&#39;s runtime system, such as functions to control goroutines. It also includes the low-level type information used by the reflect package; see reflect&#39;s documentation for the programmable interface to the run-time type system.</code></pre>
+
+<p>尽管 Go 编译器产生的是本地可执行代码，这些代码仍旧运行在 Go 的 runtime（这部分的代码可以在 runtime 包中找到）当中。这个 runtime 类似 Java 和 .NET 语言所用到的虚拟机，它负责管理包括内存分配、垃圾回收（第 10.8 节）、栈处理、goroutine、channel、切片（slice）、map 和反射（reflection）等等。</p>
+<h2 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h2><p><strong><code>runtime</code> 调度器是个非常有用的东西，关于 <code>runtime</code> 包几个方法:</strong></p>
+<ul>
+<li><p><strong>NumCPU</strong>：返回当前系统的 <code>CPU</code> 核数量</p>
+</li>
+<li><p><strong>GOMAXPROCS</strong>：设置最大的可同时使用的 <code>CPU</code> 核数</p>
+<p>通过<code>runtime.GOMAXPROCS</code>函数，应用程序可以在运行期间设置运行时系统中得P最大数量。但这会引起<code>Stop the World</code>。所以，应在应用程序最早的调用。并且最好是在运行Go程序之前设置好操作程序的环境变量<code>GOMAXPROCS</code>，而不是在程序中调用<code>runtime.GOMAXPROCS</code>函数。</p>
+<p>无论我们传递给函数的整数值是什么值，运行时系统的P最大值总会在1~256之间。</p>
+</li>
+</ul>
+<blockquote>
+<p>go1.8后，默认让程序运行在多个核上,可以不用设置了<br>go1.8前，还是要设置一下，可以更高效的利益cpu</p>
+</blockquote>
+<ul>
+<li><p><strong>Gosched</strong>：让当前线程让出 <code>cpu</code> 以让其它线程运行,它不会挂起当前线程，因此当前线程未来会继续执行</p>
+<p>这个函数的作用是让当前 <code>goroutine</code> 让出 <code>CPU</code>，当一个 <code>goroutine</code> 发生阻塞，<code>Go</code> 会自动地把与该 <code>goroutine</code> 处于同一系统线程的其他 <code>goroutine</code> 转移到另一个系统线程上去，以使这些 <code>goroutine</code> 不阻塞。</p>
+</li>
+<li><p><strong>Goexit</strong>：退出当前 <code>goroutine</code>(但是<code>defer</code>语句会照常执行)</p>
+</li>
+<li><p><strong>NumGoroutine</strong>：返回正在执行和排队的任务总数</p>
+<p>runtime.NumGoroutine函数在被调用后，会返回系统中的处于特定状态的Goroutine的数量。这里的特指是指Grunnable\Gruning\Gsyscall\Gwaition。处于这些状态的Groutine即被看做是活跃的或者说正在被调度。</p>
+<p>注意：垃圾回收所在Groutine的状态也处于这个范围内的话，也会被纳入该计数器。</p>
+</li>
+<li><p><strong>GOOS</strong>：目标操作系统</p>
+</li>
+<li><p><strong>runtime.GC</strong>:会让运行时系统进行一次强制性的垃圾收集</p>
+<ol>
+<li>强制的垃圾回收：不管怎样，都要进行的垃圾回收。</li>
+<li>非强制的垃圾回收：只会在一定条件下进行的垃圾回收（即运行时，系统自上次垃圾回收之后新申请的堆内存的单元（也成为单元增量）达到指定的数值）。</li>
+</ol>
+</li>
+<li><p><strong>GOROOT</strong> :获取goroot目录</p>
+</li>
+<li><p><strong>GOOS</strong> : 查看目标操作系统<br>很多时候，我们会根据平台的不同实现不同的操作，就而已用GOOS了：</p>
+</li>
+<li><p>。。。</p>
+</li>
+</ul>
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><ol>
+<li><p>获取goroot和os：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//获取goroot目录：</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"GOROOT-->"</span><span class="token punctuation">,</span>runtime<span class="token punctuation">.</span><span class="token function">GOROOT</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//获取操作系统</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"os/platform-->"</span><span class="token punctuation">,</span>runtime<span class="token punctuation">.</span>GOOS<span class="token punctuation">)</span> <span class="token comment">// GOOS--> darwin，mac系统</span></code></pre></li>
+<li><p>获取CPU数量，和设置CPU数量：</p>
+</li>
+</ol>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+	<span class="token comment">//1.获取逻辑cpu的数量</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"逻辑CPU的核数："</span><span class="token punctuation">,</span>runtime<span class="token punctuation">.</span><span class="token function">NumCPU</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token comment">//2.设置go程序执行的最大的：[1,256]</span>
+	n <span class="token operator">:=</span> runtime<span class="token punctuation">.</span><span class="token function">GOMAXPROCS</span><span class="token punctuation">(</span>runtime<span class="token punctuation">.</span><span class="token function">NumCPU</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<ol>
+<li>Gosched()：</li>
+</ol>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">go</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">5</span><span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"goroutine。。。"</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#125;</span>
+
+	<span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">4</span><span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//让出时间片，先让别的协议执行，它执行完，再回来执行此协程</span>
+		runtime<span class="token punctuation">.</span><span class="token function">Gosched</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"main。。"</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">// 执行结果</span>
+goroutine。。。
+goroutine。。。
+goroutine。。。
+goroutine。。。
+goroutine。。。
+main。。
+main。。
+main。。
+main。。</code></pre>
+
+<ol>
+<li>Goexit的使用（终止协程）</li>
+</ol>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//创建新建的协程</span>
+	<span class="token keyword">go</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"goroutine开始。。。"</span><span class="token punctuation">)</span>
+
+		<span class="token comment">//调用了别的函数</span>
+		<span class="token function">fun</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"goroutine结束。。"</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//别忘了()</span>
+
+	<span class="token comment">//睡一会儿，不让主协程结束</span>
+	time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token operator">*</span>time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+
+
+<span class="token keyword">func</span> <span class="token function">fun</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">defer</span> fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"defer。。。"</span><span class="token punctuation">)</span>
+
+	<span class="token comment">//return           //终止此函数</span>
+	runtime<span class="token punctuation">.</span><span class="token function">Goexit</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//终止所在的协程</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"fun函数。。。"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+<span class="token comment">// 结果</span>
+goroutine开始。。。
+<span class="token keyword">defer</span>。。。 </code></pre>
+
+<h1 id="临界资源安全问题"><a href="#临界资源安全问题" class="headerlink" title="临界资源安全问题"></a>临界资源安全问题</h1><h2 id="临界资源"><a href="#临界资源" class="headerlink" title="临界资源"></a>临界资源</h2><p><strong>临界资源:</strong> 指并发环境中多个进程/线程/协程共享的资源。</p>
+<p>但是在并发编程中对临界资源的处理不当， 往往会导致数据不一致的问题。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"time"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token punctuation">&#123;</span>
+	a <span class="token operator">:=</span> <span class="token number">1</span> <span class="token comment">// 被多个goroutine共享的数据</span>
+	<span class="token keyword">go</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		a <span class="token operator">=</span> <span class="token number">2</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"子goroutine。。"</span><span class="token punctuation">,</span> a<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	a <span class="token operator">=</span> <span class="token number">3</span>
+	time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"main goroutine。。"</span><span class="token punctuation">,</span> a<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h2 id="临界资源安全问题-1"><a href="#临界资源安全问题-1" class="headerlink" title="临界资源安全问题"></a>临界资源安全问题</h2><p>并发本身并不复杂，但是因为有了资源竞争的问题，就使得我们开发出好的并发程序变得复杂起来，因为会引起很多莫名其妙的问题。如果多个goroutine在访问同一个数据资源的时候，其中一个线程修改了数据，那么这个数值就被修改了，对于其他的goroutine来讲，这个数值可能是不对的。</p>
+<p>举个例子，我们通过并发来实现火车站售票这个程序。一共有100张票，4个售票口同时出售。</p>
+<p>我们先来看一下示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"math/rand"</span>
+	<span class="token string">"time"</span>
+<span class="token punctuation">)</span>
+
+<span class="token comment">//全局变量</span>
+<span class="token keyword">var</span> ticket <span class="token operator">=</span> <span class="token number">10</span> <span class="token comment">// 100张票</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	4个goroutine，模拟4个售票口，4个子程序操作同一个共享数据。
+	 */</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口1"</span><span class="token punctuation">)</span> <span class="token comment">// g1,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口2"</span><span class="token punctuation">)</span> <span class="token comment">// g2,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口3"</span><span class="token punctuation">)</span> <span class="token comment">//g3,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口4"</span><span class="token punctuation">)</span> <span class="token comment">//g4,100</span>
+
+	time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token operator">*</span>time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	rand<span class="token punctuation">.</span><span class="token function">Seed</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span><span class="token function">Now</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">UnixNano</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token comment">//for i:=1;i&lt;=100;i++&#123;</span>
+	<span class="token comment">//	fmt.Println(name,"售出：",i)</span>
+	<span class="token comment">//&#125;</span>
+	<span class="token keyword">for</span> <span class="token punctuation">&#123;</span> <span class="token comment">//ticket=1</span>
+		<span class="token keyword">if</span> ticket <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">&#123;</span> <span class="token comment">//g1,g3,g2,g4</span>
+			<span class="token comment">//睡眠</span>
+			time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span><span class="token function">Duration</span><span class="token punctuation">(</span>rand<span class="token punctuation">.</span><span class="token function">Intn</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> time<span class="token punctuation">.</span>Millisecond<span class="token punctuation">)</span>
+			<span class="token comment">// g1 ,g3, g2,g4</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> <span class="token string">"售出："</span><span class="token punctuation">,</span> ticket<span class="token punctuation">)</span>  <span class="token comment">// 1 , 0, -1 , -2</span>
+			ticket<span class="token operator">--</span>   <span class="token comment">//0 , -1 ,-2 , -3</span>
+		<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span><span class="token string">"售罄，没有票了。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>// 结果<br>售票口1 售出： 10<br>售票口3 售出： 10<br>售票口4 售出： 10<br>售票口2 售出： 10<br>售票口1 售出： 6<br>售票口2 售出： 5<br>售票口4 售出： 4<br>售票口3 售出： 3<br>售票口1 售出： 2<br>售票口4 售出： 1<br>售票口4 售罄，没有票了。。<br>售票口2 售出： 0<br>售票口2 售罄，没有票了。。<br>售票口3 售出： -1<br>售票口3 售罄，没有票了。。<br>售票口1 售出： -2<br>售票口1 售罄，没有票了。。</p>
+<p>我们为了更好的观察临界资源问题，每个goroutine先睡眠一个随机数，然后再售票，我们发现程序的运行结果，还可以卖出编号为负数的票。</p>
+<p><strong>分析：</strong></p>
+<p>我们的卖票逻辑是先判断票数的编号是否为负数，如果大于0，然后我们就进行卖票，只不过在卖票钱先睡眠，然后再卖，假如说此时已经卖票到只剩最后1张了，某一个goroutine持有了CPU的时间片，那么它再片段是否有票的时候，条件是成立的，所以它可以卖票编号为1的最后一张票。但是因为它在卖之前，先睡眠了，那么其他的goroutine就会持有CPU的时间片，而此时这张票还没有被卖出，那么第二个goroutine再判断是否有票的时候，条件也是成立的，那么它可以卖出这张票，然而它也进入了睡眠。。其他的第三个第四个goroutine都是这样的逻辑，当某个goroutine醒来的时候，不会再判断是否有票，而是直接售出，这样就卖出最后一张票了，然而其他的goroutine醒来的时候，就会陆续卖出了第0张，-1张，-2张。</p>
+<p>这就是临界资源的不安全问题。某一个goroutine在访问某个数据资源的时候，按照数值，已经判断好了条件，然后又被其他的goroutine抢占了资源，并修改了数值，等这个goroutine再继续访问这个数据的时候，数值已经不对了。</p>
+<h2 id="临界资源安全问题的解决"><a href="#临界资源安全问题的解决" class="headerlink" title="临界资源安全问题的解决"></a>临界资源安全问题的解决</h2><p>要想解决临界资源安全的问题，很多编程语言的解决方案都是同步。通过上锁的方式，某一时间段，只能允许一个goroutine来访问这个共享数据，当前goroutine访问完毕，解锁后，其他的goroutine才能来访问。</p>
+<p>我们可以借助于sync包下的锁操作。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"math/rand"</span>
+	<span class="token string">"time"</span>
+	<span class="token string">"sync"</span>
+<span class="token punctuation">)</span>
+
+<span class="token comment">//全局变量</span>
+<span class="token keyword">var</span> ticket <span class="token operator">=</span> <span class="token number">10</span> <span class="token comment">// 100张票</span>
+
+<span class="token keyword">var</span> wg sync<span class="token punctuation">.</span>WaitGroup
+<span class="token keyword">var</span> matex sync<span class="token punctuation">.</span>Mutex <span class="token comment">// 创建锁头</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">/*
+	4个goroutine，模拟4个售票口，4个子程序操作同一个共享数据。
+	 */</span>
+	wg<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口1"</span><span class="token punctuation">)</span> <span class="token comment">// g1,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口2"</span><span class="token punctuation">)</span> <span class="token comment">// g2,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口3"</span><span class="token punctuation">)</span> <span class="token comment">// g3,100</span>
+	<span class="token keyword">go</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span><span class="token string">"售票口4"</span><span class="token punctuation">)</span> <span class="token comment">// g4,100</span>
+	wg<span class="token punctuation">.</span><span class="token function">Wait</span><span class="token punctuation">(</span><span class="token punctuation">)</span>                <span class="token comment">// main要等待。。。</span>
+
+	<span class="token comment">//time.Sleep(5*time.Second)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">saleTickets</span><span class="token punctuation">(</span>name <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	rand<span class="token punctuation">.</span><span class="token function">Seed</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span><span class="token function">Now</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">UnixNano</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token keyword">defer</span> wg<span class="token punctuation">.</span><span class="token function">Done</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token comment">//for i:=1;i&lt;=100;i++&#123;</span>
+	<span class="token comment">//	fmt.Println(name,"售出：",i)</span>
+	<span class="token comment">//&#125;</span>
+	<span class="token keyword">for</span> <span class="token punctuation">&#123;</span> <span class="token comment">//ticket=1</span>
+		matex<span class="token punctuation">.</span><span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token keyword">if</span> ticket <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">&#123;</span> <span class="token comment">//g1,g3,g2,g4</span>
+			<span class="token comment">//睡眠</span>
+			time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span><span class="token function">Duration</span><span class="token punctuation">(</span>rand<span class="token punctuation">.</span><span class="token function">Intn</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> time<span class="token punctuation">.</span>Millisecond<span class="token punctuation">)</span>
+			<span class="token comment">// g1 ,g3, g2,g4</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> <span class="token string">"售出："</span><span class="token punctuation">,</span> ticket<span class="token punctuation">)</span> <span class="token comment">// 1 , 0, -1 , -2</span>
+			ticket<span class="token operator">--</span>                         <span class="token comment">//0 , -1 ,-2 , -3</span>
+		<span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			matex<span class="token punctuation">.</span><span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//解锁</span>
+			fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> <span class="token string">"售罄，没有票了。。"</span><span class="token punctuation">)</span>
+			<span class="token keyword">break</span>
+		<span class="token punctuation">&#125;</span>
+		matex<span class="token punctuation">.</span><span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//解锁</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>// 结果<br>售票口1 售出： 10<br>售票口1 售出： 9<br>售票口4 售出： 8<br>售票口2 售出： 7<br>售票口3 售出： 6<br>售票口1 售出： 5<br>售票口4 售出： 4<br>售票口2 售出： 3<br>售票口3 售出： 2<br>售票口1 售出： 1<br>售票口4 售罄，没有票了。。<br>售票口3 售罄，没有票了。。<br>售票口1 售罄，没有票了。。<br>售票口2 售罄，没有票了。。</p>
+<p>在Go的并发编程中有一句很经典的话：<strong>不要以共享内存的方式去通信，而要以通信的方式去共享内存。</strong></p>
+<p>在Go语言中并不鼓励用锁保护共享状态的方式在不同的Goroutine中分享信息(以共享内存的方式去通信)。而是鼓励通过<strong>channel</strong>将共享状态或共享状态的变化在各个Goroutine之间传递（以通信的方式去共享内存），这样同样能像用锁一样保证在同一的时间只有一个Goroutine访问共享状态。</p>
+<p>当然，在主流的编程语言中为了保证多线程之间共享数据安全性和一致性，都会提供一套基本的同步工具集，如锁，条件变量，原子操作等等。Go语言标准库也毫不意外的提供了这些同步机制，使用方式也和其他语言也差不多。</p>
+<h2 id="sync包"><a href="#sync包" class="headerlink" title="sync包"></a>sync包</h2><p>官网文档对sync包的介绍：</p>
+<pre class="language-none"><code class="language-none">Package sync provides basic synchronization primitives such as mutual exclusion locks. Other than the Once and WaitGroup types, most are intended for use by low-level library routines. Higher-level synchronization is better done via channels and communication.</code></pre>
+
+<p>sync是synchronization同步这个词的缩写，所以也会叫做同步包。这里提供了基本同步的操作，比如互斥锁等等。这里除了Once和WaitGroup类型之外，大多数类型都是供低级库例程使用的。更高级别的同步最好通过channel通道和communication通信来完成</p>
+<h2 id="WaitGroup"><a href="#WaitGroup" class="headerlink" title="WaitGroup"></a>WaitGroup</h2><p>WaitGroup，同步等待组。</p>
+<p>在类型上，它是一个结构体。一个WaitGroup的用途是等待一个goroutine的集合执行完成。主goroutine调用了Add()方法来设置要等待的goroutine的数量。然后，每个goroutine都会执行并且执行完成后调用Done()这个方法。与此同时，可以使用Wait()方法来阻塞，直到所有的goroutine都执行完成。</p>
+<h3 id="Add-方法"><a href="#Add-方法" class="headerlink" title="Add()方法"></a>Add()方法</h3><p>Add这个方法，用来设置到WaitGroup的计数器的值。我们可以理解为每个waitgroup中都有一个计数器<br>用来表示这个同步等待组中要执行的goroutin的数量。</p>
+<p>如果计数器的数值变为0，那么就表示等待时被阻塞的goroutine都被释放，如果计数器的数值为负数，那么就会引发恐慌，程序就报错了。</p>
+<h3 id="Done-方法"><a href="#Done-方法" class="headerlink" title="Done()方法"></a>Done()方法</h3><p>就是当WaitGroup同步等待组中的某个goroutine执行完毕后，设置这个WaitGroup的counter数值减1，其实Done()的底层代码就是调用了Add()方法。</p>
+<h3 id="Wait-方法"><a href="#Wait-方法" class="headerlink" title="Wait()方法"></a>Wait()方法</h3><p>Wait()方法，表示让当前的goroutine等待，进入阻塞状态。一直到WaitGroup的计数器为零。才能解除阻塞，<br>这个goroutine才能继续执行。</p>
+<h3 id="示例代码-1"><a href="#示例代码-1" class="headerlink" title="示例代码"></a>示例代码</h3><p>我们创建并启动两个goroutine，来打印数字和字母，并在main goroutine中，将这两个子goroutine加入到一个WaitGroup中，同时让main goroutine进入Wait()，让两个子goroutine先执行。当每个子goroutine执行完毕后，调用Done()方法，设置WaitGroup的counter减1。当两条子goroutine都执行完毕后，WaitGroup中的counter的数值为零，解除main goroutine的阻塞。</p>
+<h2 id="Mutex-互斥锁"><a href="#Mutex-互斥锁" class="headerlink" title="Mutex(互斥锁)"></a>Mutex(互斥锁)</h2><p>通过上一小节，我们知道了在并发程序中，会存在临界资源问题。就是当多个协程来访问共享的数据资源，那么这个共享资源是不安全的。为了解决协程同步的问题我们使用了channel，但是Go语言也提供了传统的同步工具。什么是锁呢？就是某个协程（线程）在访问某个资源时先锁住，防止其它协程的访问，等访问完毕解锁后其他协程再来加锁进行访问。一般用于处理并发中的临界资源问题。</p>
+<p>Go语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex。</p>
+<p>Mutex 是最简单的一种锁类型，互斥锁，同时也比较暴力，当一个 goroutine 获得了 Mutex 后，其他 goroutine 就只能乖乖等到这个 goroutine 释放该 Mutex。每个资源都对应于一个可称为 “互斥锁” 的标记，这个标记用来保证在任意时刻，只能有一个协程（线程）访问该资源。其它的协程只能等待。</p>
+<p>互斥锁是传统并发编程对共享资源进行访问控制的主要手段，它由标准库sync中的Mutex结构体类型表示。sync.Mutex类型只有两个公开的指针方法，Lock和Unlock。Lock锁定当前的共享资源，Unlock进行解锁。</p>
+<p>在使用互斥锁时，一定要注意：对资源操作完成后，一定要解锁，否则会出现流程执行异常，死锁等问题。通常借助defer。锁定后，立即使用defer语句保证互斥锁及时解锁。</p>
+<p>部分源码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token operator">/</span> A Mutex is a mutual exclusion lock<span class="token punctuation">.</span>
+<span class="token comment">// The zero value for a Mutex is an unlocked mutex.</span>
+<span class="token comment">//</span>
+<span class="token comment">// A Mutex must not be copied after first use.</span>
+<span class="token keyword">type</span> Mutex <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+	state <span class="token builtin">int32</span> <span class="token comment">//互斥锁上锁状态枚举值如下所示</span>
+	sema  <span class="token builtin">uint32</span> <span class="token comment">//信号量，向处于Gwaitting的G发送信号</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">// A Locker represents an object that can be locked and unlocked.</span>
+<span class="token keyword">type</span> Locker <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+	<span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">const</span> <span class="token punctuation">(</span>
+	mutexLocked <span class="token operator">=</span> <span class="token number">1</span> <span class="token operator">&lt;&lt;</span> <span class="token boolean">iota</span> <span class="token comment">// mutex is locked  ，1 互斥锁是锁定的</span>
+	mutexWoken <span class="token comment">// 2 唤醒锁</span>
+	mutexStarving
+	mutexWaiterShift <span class="token operator">=</span> <span class="token boolean">iota</span> <span class="token comment">// 统计阻塞在这个互斥锁上的goroutine数目需要移位的数值</span>
+	starvationThresholdNs <span class="token operator">=</span> <span class="token number">1e6</span>
+<span class="token punctuation">)</span></code></pre>
+
+<h3 id="Lock-方法："><a href="#Lock-方法：" class="headerlink" title="Lock()方法："></a>Lock()方法：</h3><p>Lock()这个方法，锁定m。如果该锁已在使用中，则调用goroutine将阻塞，直到互斥体可用。</p>
+<h3 id="Unlock-方法"><a href="#Unlock-方法" class="headerlink" title="Unlock()方法"></a>Unlock()方法</h3><p>Unlock()方法，解锁解锁m。如果m未在要解锁的条目上锁定，则为运行时错误。</p>
+<p>锁定的互斥体不与特定的goroutine关联。允许一个goroutine锁定互斥体，然后安排另一个goroutine解锁互斥体。</p>
+<h3 id="示例代码-2"><a href="#示例代码-2" class="headerlink" title="示例代码"></a>示例代码</h3><p>我们针对于上次课程汇总，使用goroutine，模拟4个售票口出售火车票的案例。4个售票口同时卖票，会发生临界资源数据安全问题。我们使用互斥锁解决一下。(Go语言推崇的是使用Channel来实现数据共享，但是也还是提供了传统的同步处理方式)。</p>
+<h2 id="RWMutex-读写锁"><a href="#RWMutex-读写锁" class="headerlink" title="RWMutex(读写锁)"></a>RWMutex(读写锁)</h2><p>通过对互斥锁的学习，我们已经知道了锁的概念以及用途。主要是用于处理并发中的临界资源问题。Go语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex。其中RWMutex是基于Mutex实现的，只读锁的实现使用类似引用计数器的功能。</p>
+<p>RWMutex是读/写互斥锁。锁可以由任意数量的读取器或单个编写器持有。RWMutex的零值是未锁定的mutex。如果一个goroutine持有一个rRWMutex进行读取，而另一个goroutine可能调用lock，那么在释放初始读取锁之前，任何goroutine都不应该期望能够获取读取锁。特别是，这禁止递归读取锁定。这是为了确保锁最终可用；被阻止的锁调用会将新的读卡器排除在获取锁之外。</p>
+<p>我们怎么理解读写锁呢？当有一个 goroutine 获得写锁定，其它无论是读锁定还是写锁定都将阻塞直到写解锁；当有一个 goroutine 获得读锁定，其它读锁定仍然可以继续；当有一个或任意多个读锁定，写锁定将等待所有读锁定解锁之后才能够进行写锁定。所以说这里的读锁定（RLock）目的其实是告诉写锁定：有很多人正在读取数据，你给我站一边去，等它们读（读解锁）完你再来写（写锁定）。我们可以将其总结为如下三条：</p>
+<ol>
+<li>同时只能有一个 goroutine 能够获得写锁定。</li>
+<li>同时可以有任意多个 gorouinte 获得读锁定。</li>
+<li>同时只能存在写锁定或读锁定（读和写互斥）。</li>
+</ol>
+<p>所以，RWMutex这个读写锁，该锁可以加多个读锁或者一个写锁，其经常用于读次数远远多于写次数的场景。</p>
+<p>读写锁的写锁只能锁定一次，解锁前不能多次锁定，读锁可以多次，但读解锁次数最多只能比读锁次数多一次，一般情况下我们不建议读解锁次数多余读锁次数。</p>
+<p>基本遵循两大原则：</p>
+<pre class="language-none"><code class="language-none">1、可以随便读，多个goroutine同时读。
+
+2、写的时候，啥也不能干。不能读也不能写。</code></pre>
+
+<p>读写锁即是针对于读写操作的互斥锁。它与普通的互斥锁最大的不同就是，它可以分别针对读操作和写操作进行锁定和解锁操作。读写锁遵循的访问控制规则与互斥锁有所不同。在读写锁管辖的范围内，它允许任意个读操作的同时进行。但是在同一时刻，它只允许有一个写操作在进行。</p>
+<p>并且在某一个写操作被进行的过程中，读操作的进行也是不被允许的。也就是说读写锁控制下的多个写操作之间都是互斥的，并且写操作与读操作之间也都是互斥的。但是，多个读操作之间却不存在互斥关系。</p>
+<h3 id="RLock-方法"><a href="#RLock-方法" class="headerlink" title="RLock()方法"></a>RLock()方法</h3><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>rw <span class="token operator">*</span>RWMutex<span class="token punctuation">)</span> <span class="token function">RLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p>读锁，当有写锁时，无法加载读锁，当只有读锁或者没有锁时，可以加载读锁，读锁可以加载多个，所以适用于“读多写少”的场景。</p>
+<h3 id="RUnlock-方法"><a href="#RUnlock-方法" class="headerlink" title="RUnlock()方法"></a>RUnlock()方法</h3><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>rw <span class="token operator">*</span>RWMutex<span class="token punctuation">)</span> <span class="token function">RUnlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p>读锁解锁，RUnlock 撤销单次RLock调用，它对于其它同时存在的读取器则没有效果。若rw并没有为读取而锁定，调用RUnlock就会引发一个运行时错误。</p>
+<h3 id="Lock-方法：-1"><a href="#Lock-方法：-1" class="headerlink" title="Lock()方法："></a>Lock()方法：</h3><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>rw <span class="token operator">*</span>RWMutex<span class="token punctuation">)</span> <span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p>写锁，如果在添加写锁之前已经有其他的读锁和写锁，则Lock就会阻塞直到该锁可用，为确保该锁最终可用，已阻塞的Lock调用会从获得的锁中排除新的读取锁，即写锁权限高于读锁，有写锁时优先进行写锁定。</p>
+<h3 id="Unlock-方法-1"><a href="#Unlock-方法-1" class="headerlink" title="Unlock()方法"></a>Unlock()方法</h3><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>rw <span class="token operator">*</span>RWMutex<span class="token punctuation">)</span> <span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p>写锁解锁，如果没有进行写锁定，则就会引起一个运行时错误。</p>
+<h3 id="示例代码："><a href="#示例代码：" class="headerlink" title="示例代码："></a>示例代码：</h3><pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"sync"</span>
+	<span class="token string">"time"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">var</span> rwMutex <span class="token operator">*</span>sync<span class="token punctuation">.</span>RWMutex
+<span class="token keyword">var</span> wg <span class="token operator">*</span>sync<span class="token punctuation">.</span>WaitGroup
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	rwMutex <span class="token operator">=</span> <span class="token function">new</span><span class="token punctuation">(</span>sync<span class="token punctuation">.</span>RWMutex<span class="token punctuation">)</span>
+	wg <span class="token operator">=</span> <span class="token function">new</span><span class="token punctuation">(</span>sync<span class="token punctuation">.</span>WaitGroup<span class="token punctuation">)</span>
+
+	<span class="token comment">//wg.Add(2)</span>
+	<span class="token comment">//</span>
+	<span class="token comment">////多个同时读取</span>
+	<span class="token comment">//go readData(1)</span>
+	<span class="token comment">//go readData(2)</span>
+
+	wg<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">writeData</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">readData</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">readData</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">readData</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span>
+	<span class="token keyword">go</span> <span class="token function">writeData</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span>
+
+	wg<span class="token punctuation">.</span><span class="token function">Wait</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"main..over..."</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">writeData</span><span class="token punctuation">(</span>i <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">defer</span> wg<span class="token punctuation">.</span><span class="token function">Done</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	rwMutex<span class="token punctuation">.</span><span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//写操作上锁</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"开始写：write start。。"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"正在写：writing。。。。"</span><span class="token punctuation">)</span>
+	time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span><span class="token number">3</span> <span class="token operator">*</span> time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"写结束：write over。。"</span><span class="token punctuation">)</span>
+
+	rwMutex<span class="token punctuation">.</span><span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">readData</span><span class="token punctuation">(</span>i <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">defer</span> wg<span class="token punctuation">.</span><span class="token function">Done</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	rwMutex<span class="token punctuation">.</span><span class="token function">RLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//读操作上锁</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"开始读：read start。。"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"正在读取数据：reading。。。"</span><span class="token punctuation">)</span>
+	time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span><span class="token number">3</span> <span class="token operator">*</span> time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> <span class="token string">"读结束：read over。。。"</span><span class="token punctuation">)</span>
+
+	rwMutex<span class="token punctuation">.</span><span class="token function">RUnlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//读操作解锁</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">1 开始写：write start。。
+1 正在写：writing。。。。
+1 写结束：write over。。
+5 开始读：read start。。     
+5 正在读取数据：reading。。。
+8 开始读：read start。。     
+2 开始读：read start。。     
+2 正在读取数据：reading。。。
+8 正在读取数据：reading。。。
+8 读结束：read over。。。
+5 读结束：read over。。。
+2 读结束：read over。。。
+3 开始写：write start。。
+3 正在写：writing。。。。
+3 写结束：write over。。
+main..over... </code></pre>
+
+<p>最后概括：</p>
+<ol>
+<li>读锁不能阻塞读锁</li>
+<li>读锁需要阻塞写锁，直到所有读锁都释放</li>
+<li>写锁需要阻塞读锁，直到所有写锁都释放</li>
+<li>写锁需要阻塞写锁</li>
+</ol>
+</div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>TAYNPG</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://taynpg.github.io/2021/05/08/golang-erupt-simultaneously-08/" title="Go并发-08">https://taynpg.github.io/2021/05/08/golang-erupt-simultaneously-08/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/2021/05/09/golang-channel-09/" rel="prev" title="Go通道-09"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Go通道-09</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/2021/05/07/golang-file-operation-07/" rel="next" title="Go文件操作-07"><span class="post-nav-text">Go文件操作-07</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>要不要和我说些什么？</span><br></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> TAYNPG</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div><div class="live_time"><span>本博客已悄悄的地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2021-05-10T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a></div></body></html>

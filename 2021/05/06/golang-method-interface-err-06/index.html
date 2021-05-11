@@ -1,0 +1,837 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="TAYNPG"><meta name="copyright" content="TAYNPG"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Go接口与错误处理-06 | 拐几个弯</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="icon" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"taynpg.github.io","root":"/","title":"土豆呀土豆","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><meta name="description" content="Go的方法、接口、OOP编程、type和错误处理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go接口与错误处理-06">
+<meta property="og:url" content="https://taynpg.github.io/2021/05/06/golang-method-interface-err-06/index.html">
+<meta property="og:site_name" content="拐几个弯">
+<meta property="og:description" content="Go的方法、接口、OOP编程、type和错误处理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-06T12:15:58.000Z">
+<meta property="article:modified_time" content="2021-05-11T02:50:05.569Z">
+<meta property="article:author" content="TAYNPG">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="TAYNPG"><img width="96" loading="lazy" src="/favicon.ico" alt="TAYNPG"></a><div class="site-author-name"><a href="/about/">TAYNPG</a></div><span class="site-name">拐几个弯</span><sub class="site-subtitle">RECORD SOMETING</sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">10</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://blog.csdn.net/Taynpg" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%B9%E6%B3%95"><span class="toc-number">1.</span> <span class="toc-text">方法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3"><span class="toc-number">2.</span> <span class="toc-text">接口</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%B9%89%E6%8E%A5%E5%8F%A3"><span class="toc-number">2.1.</span> <span class="toc-text">定义接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E5%80%BC"><span class="toc-number">2.2.</span> <span class="toc-text">接口值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E5%8F%82%E6%95%B0"><span class="toc-number">2.3.</span> <span class="toc-text">接口参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E7%9A%84%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.4.</span> <span class="toc-text">接口的类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E6%96%AD%E8%A8%80"><span class="toc-number">2.5.</span> <span class="toc-text">接口断言</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OOP%E7%BC%96%E7%A8%8B"><span class="toc-number">3.</span> <span class="toc-text">OOP编程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#type%E5%85%B3%E9%94%AE%E5%AD%97"><span class="toc-number">4.</span> <span class="toc-text">type关键字</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-number">5.</span> <span class="toc-text">错误处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%94%99%E8%AF%AF"><span class="toc-number">5.1.</span> <span class="toc-text">什么是错误</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BC%94%E7%A4%BA%E9%94%99%E8%AF%AF"><span class="toc-number">5.2.</span> <span class="toc-text">演示错误</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E7%B1%BB%E5%9E%8B%E8%A1%A8%E7%A4%BA"><span class="toc-number">5.3.</span> <span class="toc-text">错误类型表示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E9%94%99%E8%AF%AF"><span class="toc-number">5.4.</span> <span class="toc-text">自定义错误</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#panic-%E5%92%8Crecover"><span class="toc-number">5.5.</span> <span class="toc-text">panic()和recover()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A7%BF%E5%8A%BF"><span class="toc-number">5.6.</span> <span class="toc-text">错误处理的正确姿势</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A7%BF%E5%8A%BF"><span class="toc-number">5.7.</span> <span class="toc-text">异常处理的正确姿势</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://taynpg.github.io/2021/05/06/golang-method-interface-err-06/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="TAYNPG"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="拐几个弯"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Go接口与错误处理-06</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-06 20:15:58" itemprop="dateCreated datePublished" datetime="2021-05-06T20:15:58+08:00">2021-05-06</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2021-05-11 10:50:05" itemprop="dateModified" datetime="2021-05-11T10:50:05+08:00">2021-05-11</time></div><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/Go%E8%AF%AD%E8%A8%80/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">Go语言</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/golang/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">golang</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h1 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h1><p>Go 语言中同时有函数和方法。一个方法就是一个包含了接受者的函数，接受者可以是命名类型或者结构体类型的一个值或者是一个指针。所有给定类型的方法属于该类型的方法集。</p>
+<p>方法只是一个函数，它带有一个特殊的接收器类型，它是在func关键字和方法名之间编写的。接收器可以是struct类型或非struct类型，接收方可以在方法内部访问。方法能给用户自定义的类型添加新的行为。它和函数的区别在于方法有一个接收者，给一个函数添加一个接收者，那么它就变成了方法,接收者可以是值接收者，也可以是指针接收者。</p>
+<p>在调用方法的时候，值类型既可以调用值接收者的方法，也可以调用指针接收者的方法；指针类型既可以调用指针接收者的方法，也可以调用值接收者的方法，也就是说，不管方法的接收者是什么类型，该类型的值和指针都可以调用，不必严格符合接收者的类型。</p>
+<p>定义方法：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>t Type<span class="token punctuation">)</span> <span class="token function">methodName</span><span class="token punctuation">(</span>parameter list<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">return</span> list<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">func</span> <span class="token function">funcName</span><span class="token punctuation">(</span>parameter list<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">return</span> list<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">type</span> Employee <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    name     <span class="token builtin">string</span>
+    salary   <span class="token builtin">int</span>
+    currency <span class="token builtin">string</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">/*
+ displaySalary() method has Employee as the receiver type
+*/</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e Employee<span class="token punctuation">)</span> <span class="token function">displaySalary</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Salary of %s is %s%d"</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span>name<span class="token punctuation">,</span> e<span class="token punctuation">.</span>currency<span class="token punctuation">,</span> e<span class="token punctuation">.</span>salary<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    emp1 <span class="token operator">:=</span> Employee <span class="token punctuation">&#123;</span>
+        name<span class="token punctuation">:</span>     <span class="token string">"Sam Adolf"</span><span class="token punctuation">,</span>
+        salary<span class="token punctuation">:</span>   <span class="token number">5000</span><span class="token punctuation">,</span>
+        currency<span class="token punctuation">:</span> <span class="token string">"$"</span><span class="token punctuation">,</span>
+    <span class="token punctuation">&#125;</span>
+    emp1<span class="token punctuation">.</span><span class="token function">displaySalary</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//Calling displaySalary() method of Employee type</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<h1 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h1><p>面向对象世界中的接口的一般定义是“接口定义对象的行为”。它表示让指定对象应该做什么。实现这种行为的方法(实现细节)是针对对象的。在Go中，接口是一组方法签名。当类型为接口中的所有方法提供定义时，它被称为实现接口。它与OOP非常相似。接口指定了类型应该具有的方法，类型决定了如何实现这些方法。</p>
+<blockquote>
+<p>它把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口</p>
+<p>接口定义了一组方法，如果某个对象实现了某个接口的所有方法，则此对象就实现了该接口。</p>
+</blockquote>
+<h2 id="定义接口"><a href="#定义接口" class="headerlink" title="定义接口"></a>定义接口</h2><pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">/* 定义接口 */</span>
+<span class="token keyword">type</span> interface_name <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+   method_name1 <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span>
+   method_name2 <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span>
+   method_name3 <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span>
+   <span class="token operator">...</span>
+   method_namen <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">/* 定义结构体 */</span>
+<span class="token keyword">type</span> struct_name <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+   <span class="token comment">/* variables */</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">/* 实现接口方法 */</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>struct_name_variable struct_name<span class="token punctuation">)</span> <span class="token function">method_name1</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span> <span class="token punctuation">&#123;</span>
+   <span class="token comment">/* 方法实现 */</span>
+<span class="token punctuation">&#125;</span>
+<span class="token operator">...</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>struct_name_variable struct_name<span class="token punctuation">)</span> <span class="token function">method_namen</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">[</span>return_type<span class="token punctuation">]</span> <span class="token punctuation">&#123;</span>
+   <span class="token comment">/* 方法实现*/</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+    <span class="token string">"fmt"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">type</span> Phone <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">type</span> NokiaPhone <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>nokiaPhone NokiaPhone<span class="token punctuation">)</span> <span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"I am Nokia, I can call you!"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">type</span> IPhone <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>iPhone IPhone<span class="token punctuation">)</span> <span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"I am iPhone, I can call you!"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">var</span> phone Phone
+
+    phone <span class="token operator">=</span> <span class="token function">new</span><span class="token punctuation">(</span>NokiaPhone<span class="token punctuation">)</span>
+    phone<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    phone <span class="token operator">=</span> <span class="token function">new</span><span class="token punctuation">(</span>IPhone<span class="token punctuation">)</span>
+    phone<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span></code></pre>
+
+<ul>
+<li>interface可以被任意的对象实现</li>
+<li>一个对象可以实现任意多个interface</li>
+<li>任意的类型都实现了空interface(我们这样定义：interface{})，也就是包含0个method的interface</li>
+</ul>
+<h2 id="接口值"><a href="#接口值" class="headerlink" title="接口值"></a>接口值</h2><pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Human、Student、Employee 都实现了 Men 接口</span>
+<span class="token comment">// 三个类型都实现了这两个方法</span>
+<span class="token keyword">type</span> Men <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+	<span class="token function">SayHi</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token function">Sing</span><span class="token punctuation">(</span>lyrics <span class="token builtin">string</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+x <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span>Men<span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span>
+<span class="token comment">// 这三个都是不同类型的元素，但是他们实现了interface同一个接口</span>
+x<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span> x<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> x<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span> <span class="token operator">=</span> paul<span class="token punctuation">,</span> sam<span class="token punctuation">,</span> mike
+<span class="token keyword">for</span> <span class="token boolean">_</span><span class="token punctuation">,</span> value <span class="token operator">:=</span> <span class="token keyword">range</span> x <span class="token punctuation">&#123;</span>
+    value<span class="token punctuation">.</span><span class="token function">SayHi</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>那么interface里面到底能存什么值呢？如果我们定义了一个interface的变量，那么这个变量里面可以存实现这个interface的任意类型的对象。例如上面例子中，我们定义了一个Men interface类型的变量m，那么m里面可以存Human、Student或者Employee值，当然，使用指针的方式，也是可以的，但是，接口对象不能调用实现对象的属性.</p>
+<h2 id="接口参数"><a href="#接口参数" class="headerlink" title="接口参数"></a>接口参数</h2><p>interface的变量可以持有任意实现该interface类型的对象，这给我们编写函数(包括method)提供了一些额外的思考，我们是不是可以通过定义interface参数，让函数接受各种类型的参数。</p>
+<h2 id="接口的类型"><a href="#接口的类型" class="headerlink" title="接口的类型"></a>接口的类型</h2><p>翻译过来就是：如果某个东西长得像鸭子，像鸭子一样游泳，像鸭子一样嘎嘎叫，那它就可以被看成是一只鸭子。</p>
+<p>Duck Typing，鸭子类型，是动态编程语言的一种对象推断策略，它更关注对象能如何被使用，而不是对象的类型本身。Go 语言作为一门静态语言，它通过通过接口的方式完美支持鸭子类型。而在静态语言如 Java, C++ 中，必须要显示地声明实现了某个接口，之后，才能用在任何需要这个接口的地方。如果你在程序中调用某个数，却传入了一个根本就没有实现另一个的类型，那在编译阶段就不会通过。这也是静态语言比动态语言更安全的原因。</p>
+<p>动态语言和静态语言的差别在此就有所体现。静态语言在编译期间就能发现类型不匹配的错误，不像动态语言，必须要运行到那一行代码才会报错。当然，静态语言要求程序员在编码阶段就要按照规定来编写程序，为每个变量规定数据类型，这在某种程度上，加大了工作量，也加长了代码量。动态语言则没有这些要求，可以让人更专注在业务上，代码也更短，写起来更快，这一点，写 python 的同学比较清楚。</p>
+<p>Go 语言作为一门现代静态语言，是有后发优势的。它引入了动态语言的便利，同时又会进行静态语言的类型检查，写起来是非常 Happy 的。Go 采用了折中的做法：不要求类型显示地声明实现了某个接口，只要实现了相关的方法即可，编译器就能检测到。</p>
+<p>总结一下，鸭子类型是一种动态语言的风格，在这种风格中，一个对象有效的语义，不是由继承自特定的类或实现特定的接口，而是由它”当前方法和属性的集合”决定。Go 作为一种静态语言，通过接口实现了鸭子类型，实际上是 Go 的编译器在其中作了隐匿的转换工作。Go中的多态性是在接口的帮助下实现的。正如我们已经讨论过的，接口可以在Go中隐式地实现。如果类型为接口中声明的所有方法提供了定义，则实现一个接口。</p>
+<p>任何定义接口所有方法的类型都被称为隐式地实现该接口。类型接口的变量可以保存实现接口的任何值。接口的这个属性用于实现Go中的多态性。</p>
+<h2 id="接口断言"><a href="#接口断言" class="headerlink" title="接口断言"></a>接口断言</h2><p>前面说过，因为空接口 interface{}没有定义任何函数，因此 Go 中所有类型都实现了空接口。当一个函数的形参是interface{}，那么在函数中，需要对形参进行断言，从而得到它的真实类型。</p>
+<p>语法格式：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// 安全类型断言</span>
+
+<span class="token operator">&lt;</span>目标类型的值<span class="token operator">></span>，<span class="token operator">&lt;</span>布尔参数<span class="token operator">></span> <span class="token operator">:=</span> <span class="token operator">&lt;</span>表达式<span class="token operator">></span><span class="token punctuation">.</span><span class="token punctuation">(</span> 目标类型 <span class="token punctuation">)</span>
+
+<span class="token comment">//非安全类型断言</span>
+
+<span class="token operator">&lt;</span>目标类型的值<span class="token operator">></span> <span class="token operator">:=</span> <span class="token operator">&lt;</span>表达式<span class="token operator">></span><span class="token punctuation">.</span><span class="token punctuation">(</span> 目标类型 <span class="token punctuation">)</span></code></pre>
+
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token string">"fmt"</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">var</span> i1 <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span> <span class="token operator">=</span> <span class="token builtin">new</span> <span class="token punctuation">(</span>Student<span class="token punctuation">)</span>
+    s <span class="token operator">:=</span> i1<span class="token punctuation">.</span><span class="token punctuation">(</span>Student<span class="token punctuation">)</span> <span class="token comment">//不安全，如果断言失败，会直接panic</span>
+
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span>
+
+    <span class="token keyword">var</span> i2 <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span> <span class="token operator">=</span> <span class="token function">new</span><span class="token punctuation">(</span>Student<span class="token punctuation">)</span>
+    s<span class="token punctuation">,</span> ok <span class="token operator">:=</span> i2<span class="token punctuation">.</span><span class="token punctuation">(</span>Student<span class="token punctuation">)</span> <span class="token comment">//安全，断言失败，也不会panic，只是ok的值为false</span>
+    <span class="token keyword">if</span> ok <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">type</span> Student <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>断言其实还有另一种形式，就是用在利用 switch语句判断接口的类型。每一个case会被顺序地考虑。当命中一个case 时，就会执行 case 中的语句，因此 case 语句的顺序是很重要的，因为很有可能会有多个 case匹配的情况。</p>
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">switch</span> ins<span class="token operator">:=</span>s<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token keyword">type</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">case</span> Triangle<span class="token punctuation">:</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"三角形。。。"</span><span class="token punctuation">,</span> ins<span class="token punctuation">.</span>a<span class="token punctuation">,</span> ins<span class="token punctuation">.</span>b<span class="token punctuation">,</span> ins<span class="token punctuation">.</span>c<span class="token punctuation">)</span>
+	<span class="token keyword">case</span> Circle<span class="token punctuation">:</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"圆形。。。。"</span><span class="token punctuation">,</span> ins<span class="token punctuation">.</span>radius<span class="token punctuation">)</span>
+	<span class="token keyword">case</span> <span class="token builtin">int</span><span class="token punctuation">:</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"整型数据。。"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>接口对象不能调用接口实现对象的属性</p>
+<h1 id="OOP编程"><a href="#OOP编程" class="headerlink" title="OOP编程"></a>OOP编程</h1><p>Go并不是一个纯面向对象的编程语言。在Go中的面向对象，<strong>结构体替换了类</strong>。Go并没有提供类class，但是它提供了结构体struct，方法method，可以在结构体上添加。提供了捆绑数据和方法的行为，这些数据和方法与类类似。</p>
+<p><strong>New()函数替代了构造函数</strong>。Go不支持构造函数，如果某个类型的零值不可用，则程序员的任务是不导出该类型以防止其他包的访问，并提供一个名为NewT(parameters)的函数，该函数初始化类型T和所需的值。在Go中，它是一个命名一个函数的约定，它创建了一个T类型的值给NewT(parameters)。这就像一个构造函数。如果包只定义了一个类型，那么它的一个约定就是将这个函数命名为New(parameters)而不是NewT(parameters)。</p>
+<p>将类型更改为非导出类型，不可能从其他包中创建类型的值，因此，我们提供了一个输出的新函数，将所需的参数作为输入并返回新创建的<code>对象</code>。</p>
+<p>Go语言中，组成(Composition )替代了继承(Inheritance)。</p>
+<p><strong>Go中的多态性是在接口的帮助下实现的。</strong>类型接口的变量可以保存实现接口的任何值（这句话是接口实现多态的核核心原理），接口的这个属性用于实现Go中的多态性。</p>
+<h1 id="type关键字"><a href="#type关键字" class="headerlink" title="type关键字"></a>type关键字</h1><p>用法和别的语言相差不大。</p>
+<h1 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h1><p>在实际工程项目中，我们希望通过程序的错误信息快速定位问题，但是又不喜欢错误处理代码写的冗余而又啰嗦。<code>Go</code>语言没有提供像<code>Java</code>、<code>C#</code>语言中的<code>try...catch</code>异常处理方式，而是通过函数返回值逐层往上抛。这种设计，鼓励工程师在代码中显式的检查错误，而非忽略错误，好处就是避免漏掉本应处理的错误，但是带来一个弊端，让代码啰嗦。</p>
+<h2 id="什么是错误"><a href="#什么是错误" class="headerlink" title="什么是错误"></a>什么是错误</h2><p>错误指的是可能出现问题的地方出现了问题。比如打开一个文件时失败，这种情况在人们的意料之中 。而异常指的是不应该出现问题的地方出现了问题。比如引用了空指针，这种情况在人们的意料之外。可见，错误是业务过程的一部分，而异常不是 。</p>
+<p>Go中的错误也是一种类型，错误用内置的<code>error</code> 类型表示，就像其他类型的，如int，float64，错误值可以存储在变量中，从函数中返回，等等。</p>
+<h2 id="演示错误"><a href="#演示错误" class="headerlink" title="演示错误"></a>演示错误</h2><p>让我们从一个示例程序开始，这个程序尝试打开一个不存在的文件。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"os"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    f<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span><span class="token string">"/test.txt"</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token comment">//根据f进行文件的读或写</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>f<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"opened successfully"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<blockquote>
+<p>在os包中有打开文件的功能函数：</p>
+<p> func Open(name string) (file *File, err error)</p>
+<p>如果文件已经成功打开，那么Open函数将返回文件处理。如果在打开文件时出现错误，将返回一个非nil错误。</p>
+</blockquote>
+<p>如果一个函数或方法返回一个错误，那么按照惯例，它必须是函数返回的最后一个值。因此，<code>Open</code> 函数返回的值是最后一个值。</p>
+<p>处理错误的惯用方法是将返回的错误与nil进行比较。nil值表示没有发生错误，而非nil值表示出现错误。在我们的例子中，我们检查错误是否为nil。如果它不是nil，我们只需打印错误并从主函数返回。</p>
+<p>运行结果：</p>
+<pre class="language-go" data-language="go"><code class="language-go">open <span class="token operator">/</span>test<span class="token punctuation">.</span>txt<span class="token punctuation">:</span> No such file or directory</code></pre>
+
+<p>我们得到一个错误，说明该文件不存在。</p>
+<h2 id="错误类型表示"><a href="#错误类型表示" class="headerlink" title="错误类型表示"></a>错误类型表示</h2><p>Go 语言通过内置的错误接口提供了非常简单的错误处理机制。</p>
+<p>让我们再深入一点，看看如何定义错误类型的构建。错误是一个带有以下定义的接口类型，</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> <span class="token builtin">error</span> <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>它包含一个带有Error（）字符串的方法。任何实现这个接口的类型都可以作为一个错误使用，这个方法提供了对错误的描述。当打印错误时，fmt.Println函数在内部调用Error() 方法来获取错误的描述，这就是错误描述是如何在一行中打印出来的。</p>
+<p><strong>从错误中提取更多信息的不同方法</strong></p>
+<p>既然我们知道错误是一种接口类型，那么让我们看看如何提取更多关于错误的信息。在上面的例子中，我们仅仅是打印了错误的描述，如果我们想要的是导致错误的文件的实际路径，一种可能的方法是解析错误字符串，这是我们程序的输出：</p>
+<pre class="language-go" data-language="go"><code class="language-go">open <span class="token operator">/</span>test<span class="token punctuation">.</span>txt<span class="token punctuation">:</span> No such file or directory  </code></pre>
+
+<p>我们可以解析这个错误消息并从中获取文件路径”/test.txt”，但这是一个糟糕的方法，在新版本的语言中，错误描述可以随时更改，我们的代码将会中断。是否有办法可靠地获取文件名？答案是肯定的，它可以做到，标准Go库使用不同的方式提供更多关于错误的信息。</p>
+<p><strong>一、断言底层结构类型并从结构字段获取更多信息</strong></p>
+<p>如果仔细阅读打开函数的文档，可以看到它返回的是PathError类型的错误。PathError是一个struct类型，它在标准库中的实现如下，</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> PathError <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    Op   <span class="token builtin">string</span>
+    Path <span class="token builtin">string</span>
+    Err  <span class="token builtin">error</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>PathError<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span> <span class="token keyword">return</span> e<span class="token punctuation">.</span>Op <span class="token operator">+</span> <span class="token string">" "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span>Path <span class="token operator">+</span> <span class="token string">": "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span>Err<span class="token punctuation">.</span><span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#125;</span>  </code></pre>
+
+<p>从上面的代码中，您可以理解PathError通过声明<code>Error()string</code>方法实现了错误接口。该方法连接操作、路径和实际错误并返回它，这样我们就得到了错误信息。</p>
+<pre class="language-go" data-language="go"><code class="language-go">open <span class="token operator">/</span>test<span class="token punctuation">.</span>txt<span class="token punctuation">:</span> No such file or directory </code></pre>
+
+<p>PathError结构的路径字段包含导致错误的文件的路径。让我们修改上面写的程序，并打印出路径。</p>
+<p>修改代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"os"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    f<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span><span class="token string">"/test.txt"</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err<span class="token punctuation">,</span> ok <span class="token operator">:=</span> err<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>os<span class="token punctuation">.</span>PathError<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"File at path"</span><span class="token punctuation">,</span> err<span class="token punctuation">.</span>Path<span class="token punctuation">,</span> <span class="token string">"failed to open"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>f<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"opened successfully"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>在上面的程序中，我们使用类型断言获得错误接口的基本值。然后我们用错误来打印路径.这个程序输出,</p>
+<pre class="language-go" data-language="go"><code class="language-go">File at path <span class="token operator">/</span>test<span class="token punctuation">.</span>txt failed to open  </code></pre>
+
+<p><strong>二、断言底层结构类型，并使用方法获取更多信息</strong></p>
+<p>获得更多信息的第二种方法是断言底层类型，并通过调用struct类型的方法获取更多信息。</p>
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> DNSError <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    <span class="token operator">...</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>DNSError<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span>  
+    <span class="token operator">...</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>DNSError<span class="token punctuation">)</span> <span class="token function">Timeout</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span> <span class="token punctuation">&#123;</span>  
+    <span class="token operator">...</span> 
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>DNSError<span class="token punctuation">)</span> <span class="token function">Temporary</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span> <span class="token punctuation">&#123;</span>  
+    <span class="token operator">...</span> 
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>从上面的代码中可以看到，DNSError struct有两个方法Timeout() bool和Temporary() bool，它们返回一个布尔值，表示错误是由于超时还是临时的。让我们编写一个断言*DNSError类型的程序，并调用这些方法来确定错误是临时的还是超时的。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"net"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    addr<span class="token punctuation">,</span> err <span class="token operator">:=</span> net<span class="token punctuation">.</span><span class="token function">LookupHost</span><span class="token punctuation">(</span><span class="token string">"golangbot123.com"</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err<span class="token punctuation">,</span> ok <span class="token operator">:=</span> err<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>net<span class="token punctuation">.</span>DNSError<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err<span class="token punctuation">.</span><span class="token function">Timeout</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"operation timed out"</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> err<span class="token punctuation">.</span><span class="token function">Temporary</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"temporary error"</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"generic error: "</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>addr<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>在上面的程序中，我们正在尝试获取一个无效域名的ip地址，这是一个无效的域名。golangbot123.com。我们通过声明它来输入<code>*net.DNSError</code>来获得错误的潜在价值。在我们的例子中，错误既不是暂时的，也不是由于超时，因此程序会打印出来：</p>
+<pre class="language-go" data-language="go"><code class="language-go">generic <span class="token builtin">error</span><span class="token punctuation">:</span>  lookup golangbot123<span class="token punctuation">.</span>com<span class="token punctuation">:</span> no such host  </code></pre>
+
+<p>如果错误是临时的或超时的，那么相应的If语句就会执行，我们可以适当地处理它。</p>
+<p><strong>三、直接比较</strong></p>
+<p>获得更多关于错误的详细信息的第三种方法是直接与类型错误的变量进行比较。让我们通过一个例子来理解这个问题，filepath包的Glob函数用于返回与模式匹配的所有文件的名称，当模式出现错误时，该函数将返回一个错误ErrBadPattern。在filepath包中定义了ErrBadPattern，如下所述：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">var</span> ErrBadPattern <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"syntax error in pattern"</span><span class="token punctuation">)</span>  </code></pre>
+
+<p><code>errors.New()</code>用于创建新的错误，当模式出现错误时，由Glob函数返回ErrBadPattern。让我们写一个小程序来检查这个错误：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"path/filepath"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    files<span class="token punctuation">,</span> <span class="token builtin">error</span> <span class="token operator">:=</span> filepath<span class="token punctuation">.</span><span class="token function">Glob</span><span class="token punctuation">(</span><span class="token string">"["</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token builtin">error</span> <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token operator">&amp;&amp;</span> <span class="token builtin">error</span> <span class="token operator">==</span> filepath<span class="token punctuation">.</span>ErrBadPattern <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token builtin">error</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"matched files"</span><span class="token punctuation">,</span> files<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-go" data-language="go"><code class="language-go">syntax <span class="token builtin">error</span> in pattern  </code></pre>
+
+<p><strong>不要忽略错误</strong></p>
+<p>永远不要忽略一个错误。忽视错误会招致麻烦，让我重新编写一个示例，该示例列出了与模式匹配的所有文件的名称，而忽略了错误处理代码。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"path/filepath"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    files<span class="token punctuation">,</span> <span class="token boolean">_</span> <span class="token operator">:=</span> filepath<span class="token punctuation">.</span><span class="token function">Glob</span><span class="token punctuation">(</span><span class="token string">"["</span><span class="token punctuation">)</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"matched files"</span><span class="token punctuation">,</span> files<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>我们从前面的例子中已经知道模式是无效的。我忽略了Glob函数返回的错误，方法是使用行号中的空白标识符。</p>
+<pre class="language-go" data-language="go"><code class="language-go">matched files <span class="token punctuation">[</span><span class="token punctuation">]</span>  </code></pre>
+
+<p>由于我们忽略了这个错误，输出看起来好像没有文件匹配这个模式，但是实际上这个模式本身是畸形的。所以不要忽略错误。</p>
+<h2 id="自定义错误"><a href="#自定义错误" class="headerlink" title="自定义错误"></a>自定义错误</h2><p>创建自定义错误可以使用errors包下的New()函数，以及fmt包下的：Errorf()函数。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//errors包：</span>
+<span class="token keyword">func</span> <span class="token function">New</span><span class="token punctuation">(</span>text <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+
+<span class="token comment">//fmt包：</span>
+<span class="token keyword">func</span> <span class="token function">Errorf</span><span class="token punctuation">(</span>format <span class="token builtin">string</span><span class="token punctuation">,</span> a <span class="token operator">...</span><span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span></code></pre>
+
+<p>在使用New()函数创建自定义错误之前，让我们了解它是如何实现的。下面提供了错误包中的新功能的实现。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// Package errors implements functions to manipulate errors.</span>
+  <span class="token keyword">package</span> errors
+
+  <span class="token comment">// New returns an error that formats as the given text.</span>
+  <span class="token keyword">func</span> <span class="token function">New</span><span class="token punctuation">(</span>text <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">return</span> <span class="token operator">&amp;</span>errorString<span class="token punctuation">&#123;</span>text<span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token comment">// errorString is a trivial implementation of error.</span>
+  <span class="token keyword">type</span> errorString <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+      s <span class="token builtin">string</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>errorString<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">return</span> e<span class="token punctuation">.</span>s
+  <span class="token punctuation">&#125;</span></code></pre>
+
+<p>既然我们知道了New()函数是如何工作的，那么就让我们在自己的程序中使用它来创建一个自定义错误，我们将创建一个简单的程序，计算一个圆的面积，如果半径为负，将返回一个错误。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"errors"</span>
+    <span class="token string">"fmt"</span>
+    <span class="token string">"math"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius <span class="token builtin">float64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">float64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">if</span> radius <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"Area calculation failed, radius is less than zero"</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> math<span class="token punctuation">.</span>Pi <span class="token operator">*</span> radius <span class="token operator">*</span> radius<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    radius <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">20.0</span>
+    area<span class="token punctuation">,</span> err <span class="token operator">:=</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Area of circle %0.2f"</span><span class="token punctuation">,</span> area<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-go" data-language="go"><code class="language-go">Area calculation failed<span class="token punctuation">,</span> radius is less than zero </code></pre>
+
+<p>使用Errorf向错误添加更多信息。上面的程序运行得很好，但是如果我们打印出导致错误的实际半径，那就不好了。这就是fmt包的Errorf函数的用武之地。这个函数根据一个格式说明器格式化错误，并返回一个字符串作为值来满足错误，使用Errorf函数，修改程序：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"math"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius <span class="token builtin">float64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">float64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">if</span> radius <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> fmt<span class="token punctuation">.</span><span class="token function">Errorf</span><span class="token punctuation">(</span><span class="token string">"Area calculation failed, radius %0.2f is less than zero"</span><span class="token punctuation">,</span> radius<span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> math<span class="token punctuation">.</span>Pi <span class="token operator">*</span> radius <span class="token operator">*</span> radius<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    radius <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">20.0</span>
+    area<span class="token punctuation">,</span> err <span class="token operator">:=</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Area of circle %0.2f"</span><span class="token punctuation">,</span> area<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-go" data-language="go"><code class="language-go">Area calculation failed<span class="token punctuation">,</span> radius <span class="token operator">-</span><span class="token number">20.00</span> is less than zero  </code></pre>
+
+<p>使用struct类型和字段提供关于错误的更多信息。还可以使用将错误接口实现为错误的struct类型，这给我们提供了更多的错误处理的灵活性，在我们的示例中，如果我们想要访问导致错误的半径，那么现在唯一的方法是解析错误描述区域计算失败，半径-20.00小于零。这不是一种正确的方法，因为如果描述发生了变化，我们的代码就会中断。我们将使用在前面的教程中解释的标准库的策略，在“断言底层结构类型并从struct字段获取更多信息”，并使用struct字段来提供对导致错误的半径的访问。我们将创建一个实现错误接口的struct类型，并使用它的字段来提供关于错误的更多信息。</p>
+<p>第一步是创建一个struct类型来表示错误。错误类型的命名约定是，名称应该以文本Error结束。让我们把struct类型命名为areaError</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> areaError <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    err    <span class="token builtin">string</span>
+    radius <span class="token builtin">float64</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>上面的struct类型有一个字段半径，它存储了为错误负责的半径的值，并且错误字段存储了实际的错误消息。</p>
+<p>下一步，是实现error 接口</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>areaError<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">return</span> fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">"radius %0.2f: %s"</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span>radius<span class="token punctuation">,</span> e<span class="token punctuation">.</span>err<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>在上面的代码片段中，我们使用一个指针接收器区域错误来实现错误接口的Error() string方法。这个方法打印出半径和错误描述。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>  
+    <span class="token string">"fmt"</span>
+    <span class="token string">"math"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">type</span> areaError <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    err    <span class="token builtin">string</span>
+    radius <span class="token builtin">float64</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>areaError<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">return</span> fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">"radius %0.2f: %s"</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span>radius<span class="token punctuation">,</span> e<span class="token punctuation">.</span>err<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius <span class="token builtin">float64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">float64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">if</span> radius <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>areaError<span class="token punctuation">&#123;</span><span class="token string">"radius is negative"</span><span class="token punctuation">,</span> radius<span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> math<span class="token punctuation">.</span>Pi <span class="token operator">*</span> radius <span class="token operator">*</span> radius<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    radius <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">20.0</span>
+    area<span class="token punctuation">,</span> err <span class="token operator">:=</span> <span class="token function">circleArea</span><span class="token punctuation">(</span>radius<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err<span class="token punctuation">,</span> ok <span class="token operator">:=</span> err<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>areaError<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Radius %0.2f is less than zero"</span><span class="token punctuation">,</span> err<span class="token punctuation">.</span>radius<span class="token punctuation">)</span>
+            <span class="token keyword">return</span>
+        <span class="token punctuation">&#125;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Area of circle %0.2f"</span><span class="token punctuation">,</span> area<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>程序输出：</p>
+<pre class="language-go" data-language="go"><code class="language-go">Radius <span class="token operator">-</span><span class="token number">20.00</span> is less than zero</code></pre>
+
+<p>使用结构类型的方法提供关于错误的更多信息。在本节中，我们将编写一个程序来计算矩形的面积，如果长度或宽度小于0，这个程序将输出一个错误。第一步是创建一个结构来表示错误：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> areaError <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>  
+    err    <span class="token builtin">string</span> <span class="token comment">//error description</span>
+    length <span class="token builtin">float64</span> <span class="token comment">//length which caused the error</span>
+    width  <span class="token builtin">float64</span> <span class="token comment">//width which caused the error</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>上面的错误结构类型包含一个错误描述字段，以及导致错误的长度和宽度。</p>
+<p>现在我们有了错误类型，让我们实现错误接口，并在错误类型上添加一些方法来提供关于错误的更多信息。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>areaError<span class="token punctuation">)</span> <span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">string</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">return</span> e<span class="token punctuation">.</span>err
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>areaError<span class="token punctuation">)</span> <span class="token function">lengthNegative</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">return</span> e<span class="token punctuation">.</span>length <span class="token operator">&lt;</span> <span class="token number">0</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>e <span class="token operator">*</span>areaError<span class="token punctuation">)</span> <span class="token function">widthNegative</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span> <span class="token punctuation">&#123;</span>  
+    <span class="token keyword">return</span> e<span class="token punctuation">.</span>width <span class="token operator">&lt;</span> <span class="token number">0</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>在上面的代码片段中，我们返回<code>Error() string</code> 方法的错误描述。当长度小于0时，lengthNegative() bool方法返回true，当宽度小于0时，widthNegative() bool方法返回true。这两种方法提供了更多关于误差的信息，在这种情况下，他们说面积计算是否失败，因为长度是负的，还是宽度为负的。因此，我们使用了struct错误类型的方法来提供更多关于错误的信息。下一步是写出面积计算函数：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">rectArea</span><span class="token punctuation">(</span>length<span class="token punctuation">,</span> width <span class="token builtin">float64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">float64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    err <span class="token operator">:=</span> <span class="token string">""</span>
+    <span class="token keyword">if</span> length <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+        err <span class="token operator">+=</span> <span class="token string">"length is less than zero"</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">if</span> width <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err <span class="token operator">==</span> <span class="token string">""</span> <span class="token punctuation">&#123;</span>
+            err <span class="token operator">=</span> <span class="token string">"width is less than zero"</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            err <span class="token operator">+=</span> <span class="token string">", width is less than zero"</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token string">""</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>areaError<span class="token punctuation">&#123;</span>err<span class="token punctuation">,</span> length<span class="token punctuation">,</span> width<span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> length <span class="token operator">*</span> width<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>上面的rectArea函数检查长度或宽度是否小于0，如果它返回一个错误消息，则返回矩形的面积为nil。主函数：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  
+    length<span class="token punctuation">,</span> width <span class="token operator">:=</span> <span class="token operator">-</span><span class="token number">5.0</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">9.0</span>
+    area<span class="token punctuation">,</span> err <span class="token operator">:=</span> <span class="token function">rectArea</span><span class="token punctuation">(</span>length<span class="token punctuation">,</span> width<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err<span class="token punctuation">,</span> ok <span class="token operator">:=</span> err<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span>areaError<span class="token punctuation">)</span><span class="token punctuation">;</span> ok <span class="token punctuation">&#123;</span>
+            <span class="token keyword">if</span> err<span class="token punctuation">.</span><span class="token function">lengthNegative</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"error: length %0.2f is less than zero\n"</span><span class="token punctuation">,</span> err<span class="token punctuation">.</span>length<span class="token punctuation">)</span>
+
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">if</span> err<span class="token punctuation">.</span><span class="token function">widthNegative</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"error: width %0.2f is less than zero\n"</span><span class="token punctuation">,</span> err<span class="token punctuation">.</span>width<span class="token punctuation">)</span>
+
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+    <span class="token punctuation">&#125;</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"area of rect"</span><span class="token punctuation">,</span> area<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token builtin">error</span><span class="token punctuation">:</span> length <span class="token operator">-</span><span class="token number">5.00</span> is less than zero  
+<span class="token builtin">error</span><span class="token punctuation">:</span> width <span class="token operator">-</span><span class="token number">9.00</span> is less than zero </code></pre>
+
+<h2 id="panic-和recover"><a href="#panic-和recover" class="headerlink" title="panic()和recover()"></a>panic()和recover()</h2><p>Golang中引入两个内置函数panic和recover来触发和终止异常处理流程，同时引入关键字defer来延迟执行defer后面的函数。一直等到包含defer语句的函数执行完毕时，延迟函数（defer后的函数）才会被执行，而不管包含defer语句的函数是通过return的正常结束，还是由于panic导致的异常结束。你可以在一个函数中执行多条defer语句，它们的执行顺序与声明顺序相反。当程序运行时，如果遇到引用空指针、下标越界或显式调用panic函数等情况，则先触发panic函数的执行，然后调用延迟函数。调用者继续传递panic，因此该过程一直在调用栈中重复发生：函数停止执行，调用延迟执行函数等。如果一路在延迟函数中没有recover函数的调用，则会到达该协程的起点，该协程结束，然后终止其他所有协程，包括主协程（类似于C语言中的主线程，该协程ID为1）。</p>
+<p><strong>panic：</strong><br>1、内建函数<br>2、假如函数F中书写了panic语句，会终止其后要执行的代码，在panic所在函数F内如果存在要执行的defer函数列表，按照defer的逆序执行<br>3、返回函数F的调用者G，在G中，调用函数F语句之后的代码不会执行，假如函数G中存在要执行的defer函数列表，按照defer的逆序执行，这里的defer 有点类似 try-catch-finally 中的 finally<br>4、直到goroutine整个退出，并报告错误</p>
+<p><strong>recover：</strong><br>1、内建函数<br>2、用来控制一个goroutine的panicking行为，捕获panic，从而影响应用的行为<br>3、一般的调用建议<br>a). 在defer函数中，通过recever来终止一个gojroutine的panicking过程，从而恢复正常代码的执行<br>b). 可以获取通过panic传递的error</p>
+<p>简单来讲：go中可以抛出一个panic的异常，然后在defer中通过recover捕获这个异常，然后正常处理。错误和异常从Golang机制上讲，就是error和panic的区别。很多其他语言也一样，比如C++/Java，没有error但有errno，没有panic但有throw。</p>
+<p>Golang错误和异常是可以互相转换的：</p>
+<ol>
+<li>错误转异常，比如程序逻辑上尝试请求某个URL，最多尝试三次，尝试三次的过程中请求失败是错误，尝试完第三次还不成功的话，失败就被提升为异常了。</li>
+<li>异常转错误，比如panic触发的异常被recover恢复后，将返回值中error类型的变量进行赋值，以便上层函数继续走错误处理流程。</li>
+</ol>
+<p><strong>什么情况下用错误表达，什么情况下用异常表达，就得有一套规则，否则很容易出现一切皆错误或一切皆异常的情况。</strong></p>
+<p>以下给出异常处理的作用域（场景）：</p>
+<ol>
+<li>空指针引用</li>
+<li>下标越界</li>
+<li>除数为0</li>
+<li>不应该出现的分支，比如default</li>
+<li>输入不应该引起函数错误</li>
+</ol>
+<p>其他场景我们使用错误处理，这使得我们的函数接口很精炼。对于异常，我们可以选择在一个合适的上游去recover，并打印堆栈信息，使得部署后的程序不会终止。</p>
+<p><strong>说明： Golang错误处理方式一直是很多人诟病的地方，有些人吐槽说一半的代码都是”if err != nil { / 打印 &amp;&amp; 错误处理 / }”，严重影响正常的处理逻辑。当我们区分错误和异常，根据规则设计函数，就会大大提高可读性和可维护性。</strong></p>
+<h2 id="错误处理的正确姿势"><a href="#错误处理的正确姿势" class="headerlink" title="错误处理的正确姿势"></a>错误处理的正确姿势</h2><p><strong>姿势一：失败的原因只有一个时，不使用error</strong></p>
+<p>我们看一个案例：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>self <span class="token operator">*</span>AgentContext<span class="token punctuation">)</span> <span class="token function">CheckHostType</span><span class="token punctuation">(</span>host_type <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">switch</span> host_type <span class="token punctuation">&#123;</span>
+    <span class="token keyword">case</span> <span class="token string">"virtual_machine"</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">nil</span>
+    <span class="token keyword">case</span> <span class="token string">"bare_metal"</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">nil</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"CheckHostType ERROR:"</span> <span class="token operator">+</span> host_type<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>我们可以看出，该函数失败的原因只有一个，所以返回值的类型应该为bool，而不是error，重构一下代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>self <span class="token operator">*</span>AgentContext<span class="token punctuation">)</span> <span class="token function">IsValidHostType</span><span class="token punctuation">(</span>hostType <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token builtin">bool</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> hostType <span class="token operator">==</span> <span class="token string">"virtual_machine"</span> <span class="token operator">||</span> hostType <span class="token operator">==</span> <span class="token string">"bare_metal"</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>说明：大多数情况，导致失败的原因不止一种，尤其是对I/O操作而言，用户需要了解更多的错误信息，这时的返回值类型不再是简单的bool，而是error。</p>
+<p><strong>姿势二：没有失败时，不使用error</strong></p>
+<p>error在Golang中是如此的流行，以至于很多人设计函数时不管三七二十一都使用error，即使没有一个失败原因。<br>我们看一下示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>self <span class="token operator">*</span>CniParam<span class="token punctuation">)</span> <span class="token function">setTenantId</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    self<span class="token punctuation">.</span>TenantId <span class="token operator">=</span> self<span class="token punctuation">.</span>PodNs
+    <span class="token keyword">return</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>对于上面的函数设计，就会有下面的调用代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go">err <span class="token operator">:=</span> self<span class="token punctuation">.</span><span class="token function">setTenantId</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// log</span>
+    <span class="token comment">// free resource</span>
+    <span class="token keyword">return</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>根据我们的正确姿势，重构一下代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>self <span class="token operator">*</span>CniParam<span class="token punctuation">)</span> <span class="token function">setTenantId</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    self<span class="token punctuation">.</span>TenantId <span class="token operator">=</span> self<span class="token punctuation">.</span>PodNs
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>于是调用代码变为：</p>
+<pre class="language-go" data-language="go"><code class="language-go">self<span class="token punctuation">.</span><span class="token function">setTenantId</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+<p><strong>姿势三：error应放在返回值类型列表的最后</strong></p>
+<p>对于返回值类型error，用来传递错误信息，在Golang中通常放在最后一个。</p>
+<pre class="language-go" data-language="go"><code class="language-go">resp<span class="token punctuation">,</span> err <span class="token operator">:=</span> http<span class="token punctuation">.</span><span class="token function">Get</span><span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> nill<span class="token punctuation">,</span> err
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>bool作为返回值类型时也一样。</p>
+<pre class="language-go" data-language="go"><code class="language-go">value<span class="token punctuation">,</span> ok <span class="token operator">:=</span> cache<span class="token punctuation">.</span><span class="token function">Lookup</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> 
+<span class="token keyword">if</span> <span class="token operator">!</span>ok <span class="token punctuation">&#123;</span>
+    <span class="token comment">// ...cache[key] does not exist… </span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>姿势四：错误值统一定义，而不是跟着感觉走</strong></p>
+<p>很多人写代码时，到处return errors.New(value)，而错误value在表达同一个含义时也可能形式不同，比如“记录不存在”的错误value可能为：</p>
+<ol>
+<li>“record is not existed.”</li>
+<li>“record is not exist!”</li>
+<li>“###record is not existed！！！”</li>
+<li>…</li>
+</ol>
+<p>这使得相同的错误value撒在一大片代码里，当上层函数要对特定错误value进行统一处理时，需要漫游所有下层代码，以保证错误value统一，不幸的是有时会有漏网之鱼，而且这种方式严重阻碍了错误value的重构。于是，我们可以参考C/C++的错误码定义文件，在Golang的每个包中增加一个错误对象定义文件，如下所示：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">var</span> ERR_EOF <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"EOF"</span><span class="token punctuation">)</span>
+<span class="token keyword">var</span> ERR_CLOSED_PIPE <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"io: read/write on closed pipe"</span><span class="token punctuation">)</span>
+<span class="token keyword">var</span> ERR_NO_PROGRESS <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"multiple Read calls return no data or error"</span><span class="token punctuation">)</span>
+<span class="token keyword">var</span> ERR_SHORT_BUFFER <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"short buffer"</span><span class="token punctuation">)</span>
+<span class="token keyword">var</span> ERR_SHORT_WRITE <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"short write"</span><span class="token punctuation">)</span>
+<span class="token keyword">var</span> ERR_UNEXPECTED_EOF <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"unexpected EOF"</span><span class="token punctuation">)</span></code></pre>
+
+<p><strong>姿势五：错误逐层传递时，层层都加日志</strong></p>
+<p>层层都加日志非常方便故障定位。说明：至于通过测试来发现故障，而不是日志，目前很多团队还很难做到。如果你或你的团队能做到，那么请忽略这个姿势。</p>
+<p><strong>姿势六：错误处理使用defer</strong></p>
+<p>我们一般通过判断error的值来处理错误，如果当前操作失败，需要将本函数中已经create的资源destroy掉，示例代码如下：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">deferDemo</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    err <span class="token operator">:=</span> <span class="token function">createResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE1_FAILED
+    <span class="token punctuation">&#125;</span>
+    err <span class="token operator">=</span> <span class="token function">createResource2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">destroyResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE2_FAILED
+    <span class="token punctuation">&#125;</span>
+
+    err <span class="token operator">=</span> <span class="token function">createResource3</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">destroyResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token function">destroyResource2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE3_FAILED
+    <span class="token punctuation">&#125;</span>
+
+    err <span class="token operator">=</span> <span class="token function">createResource4</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">destroyResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token function">destroyResource2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token function">destroyResource3</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE4_FAILED
+    <span class="token punctuation">&#125;</span> 
+    <span class="token keyword">return</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>当Golang的代码执行时，如果遇到defer的闭包调用，则压入堆栈。当函数返回时，会按照后进先出的顺序调用闭包。<strong>对于闭包的参数是值传递，而对于外部变量却是引用传递，所以闭包中的外部变量err的值就变成外部函数返回时最新的err值。</strong> 根据这个结论，我们重构上面的示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">deferDemo</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    err <span class="token operator">:=</span> <span class="token function">createResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE1_FAILED
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">destroyResource1</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    err <span class="token operator">=</span> <span class="token function">createResource2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE2_FAILED
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">destroyResource2</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                   <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    err <span class="token operator">=</span> <span class="token function">createResource3</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE3_FAILED
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">destroyResource3</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    err <span class="token operator">=</span> <span class="token function">createResource4</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ERR_CREATE_RESOURCE4_FAILED
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> <span class="token boolean">nil</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>姿势七：当尝试几次可以避免失败时，不要立即返回错误</strong></p>
+<p>如果错误的发生是偶然性的，或由不可预知的问题导致。一个明智的选择是重新尝试失败的操作，有时第二次或第三次尝试时会成功。在重试时，我们需要限制重试的时间间隔或重试的次数，防止无限制的重试。</p>
+<p>两个案例：</p>
+<ol>
+<li>我们平时上网时，尝试请求某个URL，有时第一次没有响应，当我们再次刷新时，就有了惊喜。</li>
+<li>团队的一个QA曾经建议当Neutron的attach操作失败时，最好尝试三次，这在当时的环境下验证果然是有效的。</li>
+</ol>
+<p><strong>姿势八：当上层函数不关心错误时，建议不返回error</strong></p>
+<p>对于一些资源清理相关的函数（destroy/delete/clear），如果子函数出错，打印日志即可，而无需将错误进一步反馈到上层函数，因为一般情况下，上层函数是不关心执行结果的，或者即使关心也无能为力，于是我们建议将相关函数设计为不返回error。</p>
+<p><strong>姿势九：当发生错误时，不忽略有用的返回值</strong></p>
+<p>通常，当函数返回non-nil的error时，其他的返回值是未定义的(undefined)，这些未定义的返回值应该被忽略。然而，有少部分函数在发生错误时，仍然会返回一些有用的返回值。比如，当读取文件发生错误时，Read函数会返回可以读取的字节数以及错误信息。对于这种情况，应该将读取到的字符串和错误信息一起打印出来。</p>
+<p><strong>说明：对函数的返回值要有清晰的说明，以便于其他人使用。</strong></p>
+<h2 id="异常处理的正确姿势"><a href="#异常处理的正确姿势" class="headerlink" title="异常处理的正确姿势"></a>异常处理的正确姿势</h2><p><strong>姿势一：在程序开发阶段，坚持速错</strong></p>
+<p>速错，简单来讲就是“让它挂”，只有挂了你才会第一时间知道错误。在早期开发以及任何发布阶段之前，最简单的同时也可能是最好的方法是调用panic函数来中断程序的执行以强制发生错误，使得该错误不会被忽略，因而能够被尽快修复。</p>
+<p><strong>姿势二：在程序部署后，应恢复异常避免程序终止</strong></p>
+<p>在Golang中，某个Goroutine如果panic了，并且没有recover，那么整个Golang进程就会异常退出。所以，一旦Golang程序部署后，在任何情况下发生的异常都不应该导致程序异常退出，我们在上层函数中加一个延迟执行的recover调用来达到这个目的，并且是否进行recover需要根据环境变量或配置文件来定，默认需要recover。<br>这个姿势类似于C语言中的断言，但还是有区别：一般在Release版本中，断言被定义为空而失效，但需要有if校验存在进行异常保护，尽管契约式设计中不建议这样做。在Golang中，recover完全可以终止异常展开过程，省时省力。</p>
+<p>我们在调用recover的延迟函数中以最合理的方式响应该异常：</p>
+<ol>
+<li>打印堆栈的异常调用信息和关键的业务信息，以便这些问题保留可见；</li>
+<li>将异常转换为错误，以便调用者让程序恢复到健康状态并继续安全运行。</li>
+</ol>
+<p>我们看一个简单的例子：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">funcA</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> p <span class="token operator">:=</span> <span class="token function">recover</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> p <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"panic recover! p: %v"</span><span class="token punctuation">,</span> p<span class="token punctuation">)</span>
+            debug<span class="token punctuation">.</span><span class="token function">PrintStack</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token function">funcB</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">funcB</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// simulation</span>
+    <span class="token function">panic</span><span class="token punctuation">(</span><span class="token string">"foo"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"success"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">test</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    err <span class="token operator">:=</span> <span class="token function">funcA</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> err <span class="token operator">==</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"err is nil\\n"</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"err is %v\\n"</span><span class="token punctuation">,</span> err<span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>我们期望test函数的输出是：</p>
+<pre class="language-go" data-language="go"><code class="language-go">err is foo</code></pre>
+
+<p>实际上test函数的输出是：</p>
+<pre class="language-go" data-language="go"><code class="language-go">err is <span class="token boolean">nil</span></code></pre>
+
+<p>原因是panic异常处理机制不会自动将错误信息传递给error，所以要在funcA函数中进行显式的传递，代码如下所示：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">funcA</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> p <span class="token operator">:=</span> <span class="token function">recover</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> p <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"panic recover! p:"</span><span class="token punctuation">,</span> p<span class="token punctuation">)</span>
+            str<span class="token punctuation">,</span> ok <span class="token operator">:=</span> p<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token builtin">string</span><span class="token punctuation">)</span>
+            <span class="token keyword">if</span> ok <span class="token punctuation">&#123;</span>
+                err <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                err <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">"panic"</span><span class="token punctuation">)</span>
+            <span class="token punctuation">&#125;</span>
+            debug<span class="token punctuation">.</span><span class="token function">PrintStack</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token function">funcB</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>姿势三：对于不应该出现的分支，使用异常处理</strong></p>
+<p>当某些不应该发生的场景发生时，我们就应该调用panic函数来触发异常。比如，当程序到达了某条逻辑上不可能到达的路径：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">switch</span> s <span class="token operator">:=</span> <span class="token function">suit</span><span class="token punctuation">(</span><span class="token function">drawCard</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> s <span class="token punctuation">&#123;</span>
+    <span class="token keyword">case</span> <span class="token string">"Spades"</span><span class="token punctuation">:</span>
+    <span class="token comment">// ...</span>
+    <span class="token keyword">case</span> <span class="token string">"Hearts"</span><span class="token punctuation">:</span>
+    <span class="token comment">// ...</span>
+    <span class="token keyword">case</span> <span class="token string">"Diamonds"</span><span class="token punctuation">:</span>
+    <span class="token comment">// ... </span>
+    <span class="token keyword">case</span> <span class="token string">"Clubs"</span><span class="token punctuation">:</span>
+    <span class="token comment">// ...</span>
+    <span class="token keyword">default</span><span class="token punctuation">:</span>
+        <span class="token function">panic</span><span class="token punctuation">(</span>fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">"invalid suit %v"</span><span class="token punctuation">,</span> s<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>姿势四：针对入参不应该有问题的函数，使用panic设计</strong></p>
+<p>入参不应该有问题一般指的是硬编码，我们先看这两个函数（Compile和MustCompile），其中MustCompile函数是对Compile函数的包装：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">MustCompile</span><span class="token punctuation">(</span>str <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token operator">*</span>Regexp <span class="token punctuation">&#123;</span>
+    regexp<span class="token punctuation">,</span> <span class="token builtin">error</span> <span class="token operator">:=</span> <span class="token function">Compile</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token builtin">error</span> <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">panic</span><span class="token punctuation">(</span><span class="token string">`regexp: Compile(`</span> <span class="token operator">+</span> <span class="token function">quote</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">`): `</span> <span class="token operator">+</span> <span class="token builtin">error</span><span class="token punctuation">.</span><span class="token function">Error</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> regexp
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>所以，对于同时支持用户输入场景和硬编码场景的情况，一般支持硬编码场景的函数是对支持用户输入场景函数的包装。对于只支持硬编码单一场景的情况，函数设计时直接使用panic，即返回值类型列表中不会有error，这使得函数的调用处理非常方便（没有了乏味的<code>if err != nil &#123;/ 打印 &amp;&amp; 错误处理 /&#125;</code>代码块）。</p>
+</div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>TAYNPG</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://taynpg.github.io/2021/05/06/golang-method-interface-err-06/" title="Go接口与错误处理-06">https://taynpg.github.io/2021/05/06/golang-method-interface-err-06/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/2021/05/07/golang-file-operation-07/" rel="prev" title="Go文件操作-07"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Go文件操作-07</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/2021/05/05/golang-func-point-struct-05/" rel="next" title="Go函数指针结构体-05"><span class="post-nav-text">Go函数指针结构体-05</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>要不要和我说些什么？</span><br></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> TAYNPG</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div><div class="live_time"><span>本博客已悄悄的地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2021-05-10T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a></div></body></html>

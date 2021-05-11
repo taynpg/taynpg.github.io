@@ -1,0 +1,576 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="TAYNPG"><meta name="copyright" content="TAYNPG"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Go反射-10 | 拐几个弯</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="icon" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"taynpg.github.io","root":"/","title":"土豆呀土豆","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><meta name="description" content="Go语言的反射特性。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go反射-10">
+<meta property="og:url" content="https://taynpg.github.io/2021/05/10/golang-reflect-10/index.html">
+<meta property="og:site_name" content="拐几个弯">
+<meta property="og:description" content="Go语言的反射特性。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-10T12:15:58.000Z">
+<meta property="article:modified_time" content="2021-05-11T03:47:22.291Z">
+<meta property="article:author" content="TAYNPG">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="TAYNPG"><img width="96" loading="lazy" src="/favicon.ico" alt="TAYNPG"></a><div class="site-author-name"><a href="/about/">TAYNPG</a></div><span class="site-name">拐几个弯</span><sub class="site-subtitle">RECORD SOMETING</sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">10</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://blog.csdn.net/Taynpg" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8%E5%8F%8D%E5%B0%84"><span class="toc-number">1.</span> <span class="toc-text">为什么要用反射</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text">相关基础</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Type%E5%92%8CValue"><span class="toc-number">3.</span> <span class="toc-text">Type和Value</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%8D%E5%B0%84%E7%9A%84%E8%A7%84%E5%88%99"><span class="toc-number">4.</span> <span class="toc-text">反射的规则</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%8D%E5%B0%84%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-number">5.</span> <span class="toc-text">反射的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%B2%E7%9F%A5%E5%8E%9F%E6%9C%89%E7%B1%BB%E5%9E%8B"><span class="toc-number">5.1.</span> <span class="toc-text">已知原有类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AA%E7%9F%A5%E5%8E%9F%E6%9C%89%E7%B1%BB%E5%9E%8B"><span class="toc-number">5.2.</span> <span class="toc-text">未知原有类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%9A%E8%BF%87reflect-Value%E8%AE%BE%E7%BD%AE%E5%AE%9E%E9%99%85%E5%8F%98%E9%87%8F%E7%9A%84%E5%80%BC"><span class="toc-number">5.3.</span> <span class="toc-text">通过reflect.Value设置实际变量的值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%9A%E8%BF%87reflect-Value%E6%9D%A5%E8%BF%9B%E8%A1%8C%E6%96%B9%E6%B3%95%E7%9A%84%E8%B0%83%E7%94%A8"><span class="toc-number">5.4.</span> <span class="toc-text">通过reflect.Value来进行方法的调用</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://taynpg.github.io/2021/05/10/golang-reflect-10/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="TAYNPG"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="拐几个弯"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Go反射-10</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-10 20:15:58" itemprop="dateCreated datePublished" datetime="2021-05-10T20:15:58+08:00">2021-05-10</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2021-05-11 11:47:22" itemprop="dateModified" datetime="2021-05-11T11:47:22+08:00">2021-05-11</time></div><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/Go%E8%AF%AD%E8%A8%80/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">Go语言</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/golang/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">golang</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p>先看官方Doc中Rob Pike给出的关于反射的定义：</p>
+<pre class="language-none"><code class="language-none">Reflection in computing is the ability of a program to examine its own structure, particularly through types; it’s a form of metaprogramming. It’s also a great source of confusion.
+(在计算机领域，反射是一种让程序——主要是通过类型——理解其自身结构的一种能力。它是元编程的组成之一，同时它也是一大引人困惑的难题。)</code></pre>
+
+<p>维基百科中的定义：</p>
+<pre class="language-none"><code class="language-none">在计算机科学中，反射是指计算机程序在运行时（Run time）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。</code></pre>
+
+<p>不同语言的反射模型不尽相同，有些语言还不支持反射。《Go 语言圣经》中是这样定义反射的：</p>
+<blockquote>
+<p>Go 语言提供了一种机制在运行时更新变量和检查它们的值、调用它们的方法，但是在编译时并不知道这些变量的具体类型，这称为反射机制。</p>
+</blockquote>
+<h1 id="为什么要用反射"><a href="#为什么要用反射" class="headerlink" title="为什么要用反射"></a>为什么要用反射</h1><p>需要反射的 2 个常见场景：</p>
+<ol>
+<li>有时你需要编写一个函数，但是并不知道传给你的参数类型是什么，可能是没约定好；也可能是传入的类型很多，这些类型并不能统一表示。这时反射就会用的上了。</li>
+<li>有时候需要根据某些条件决定调用哪个函数，比如根据用户的输入来决定。这时就需要对函数和函数的参数进行反射，在运行期间动态地执行函数。</li>
+</ol>
+<p>但是对于反射，还是有几点不太建议使用反射的理由：</p>
+<ol>
+<li>与反射相关的代码，经常是难以阅读的。在软件工程中，代码可读性也是一个非常重要的指标。</li>
+<li>Go 语言作为一门静态语言，编码过程中，编译器能提前发现一些类型错误，但是对于反射代码是无能为力的。所以包含反射相关的代码，很可能会运行很久，才会出错，这时候经常是直接 panic，可能会造成严重的后果。</li>
+<li>反射对性能影响还是比较大的，比正常代码运行速度慢一到两个数量级。所以，对于一个项目中处于运行效率关键位置的代码，尽量避免使用反射特性。</li>
+</ol>
+<h1 id="相关基础"><a href="#相关基础" class="headerlink" title="相关基础"></a>相关基础</h1><p>反射是如何实现的？我们以前学习过 interface，它是 Go 语言实现抽象的一个非常强大的工具。当向接口变量赋予一个实体类型的时候，接口会存储实体的类型信息，反射就是通过接口的类型信息实现的，反射建立在类型的基础上。</p>
+<p>Go 语言在 reflect 包里定义了各种类型，实现了反射的各种函数，通过它们可以在运行时检测类型的信息、改变类型的值。在进行更加详细的了解之前，我们需要重新温习一下Go语言相关的一些特性，所谓温故知新，从这些特性中了解其反射机制是如何使用的。</p>
+<table>
+<thead>
+<tr>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>go语言是静态类型语言。</td>
+<td>编译时类型已经确定，比如对已基本数据类型的再定义后的类型，反射时候需要确认返回的是何种类型。</td>
+</tr>
+<tr>
+<td>空接口interface{}</td>
+<td>go的反射机制是要通过接口来进行的，而类似于Java的Object的空接口可以和任何类型进行交互，因此对基本数据类型等的反射也直接利用了这一特点</td>
+</tr>
+<tr>
+<td>Go语言的类型：</td>
+<td></td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>变量包括（type, value）两部分</p>
+<p> 理解这一点就知道为什么nil != nil了</p>
+</li>
+<li><p>type 包括 static type和concrete type. 简单来说 static type是你在编码是看见的类型(如int、string)，concrete type是runtime系统看见的类型</p>
+</li>
+<li><p>类型断言能否成功，取决于变量的concrete type，而不是static type。因此，一个 reader变量如果它的concrete type也实现了write方法的话，它也可以被类型断言为writer。</p>
+</li>
+</ul>
+<p>Go是静态类型语言。每个变量都拥有一个静态类型，这意味着每个变量的类型在编译时都是确定的：<code>int</code>，<code>float32</code>, <code>*AutoType</code>, <code>[]byte</code>, <code>chan []int</code> 诸如此类。</p>
+<p>在反射的概念中， 编译时就知道变量类型的是静态类型；运行时才知道一个变量类型的叫做动态类型。</p>
+<ul>
+<li><p>静态类型<br>静态类型就是变量声明时的赋予的类型。比如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">type</span> MyInt <span class="token builtin">int</span> <span class="token comment">// int 就是静态类型</span>
+
+<span class="token keyword">type</span> A <span class="token keyword">struct</span><span class="token punctuation">&#123;</span>
+    Name <span class="token builtin">string</span>  <span class="token comment">// string就是静态</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">var</span> i <span class="token operator">*</span><span class="token builtin">int</span>  <span class="token comment">// *int就是静态类型</span></code></pre></li>
+<li><p>动态类型<br>动态类型：运行时给这个变量赋值时，这个值的类型(如果值为nil的时候没有动态类型)。一个变量的动态类型在运行时可能改变，这主要依赖于它的赋值（前提是这个变量是接口类型）。</p>
+  <pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">var</span> A <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span> <span class="token comment">// 静态类型interface&#123;&#125;</span>
+A <span class="token operator">=</span> <span class="token number">10</span>            <span class="token comment">// 静态类型为interface&#123;&#125;  动态为int</span>
+A <span class="token operator">=</span> <span class="token string">"String"</span>      <span class="token comment">// 静态类型为interface&#123;&#125;  动态为string</span>
+<span class="token keyword">var</span> M <span class="token operator">*</span><span class="token builtin">int</span>
+A <span class="token operator">=</span> M             <span class="token comment">// A的值可以改变</span></code></pre></li>
+</ul>
+<p>Go语言的反射就是建立在类型之上的，Go的指定类型的变量的类型是静态的（也就是指定int、string这些的变量，它的type是static type），在创建变量的时候就已经确定，反射主要与Go的interface类型相关（它的type是concrete type），<strong>只有interface类型才有反射一说</strong>。</p>
+<p>在Go的实现中，每个interface变量都有一个对应pair，pair中记录了实际变量的值和类型:</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token punctuation">(</span>value<span class="token punctuation">,</span> <span class="token keyword">type</span><span class="token punctuation">)</span></code></pre>
+
+<p>value是实际变量值，type是实际变量的类型。一个interface{}类型的变量包含了2个指针，一个指针指向值的类型【对应concrete type】，另外一个指针指向实际的值【对应value】。</p>
+<p>例如，创建类型为<code>*os.File</code>的变量，然后将其赋给一个接口变量<code>r</code>：</p>
+<pre class="language-go" data-language="go"><code class="language-go">tty<span class="token punctuation">,</span> err <span class="token operator">:=</span> os<span class="token punctuation">.</span><span class="token function">OpenFile</span><span class="token punctuation">(</span><span class="token string">"/dev/tty"</span><span class="token punctuation">,</span> os<span class="token punctuation">.</span>O_RDWR<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token keyword">var</span> r io<span class="token punctuation">.</span>Reader
+r <span class="token operator">=</span> tty</code></pre>
+
+<p>接口变量<code>r</code>的<code>pair</code>中将记录如下信息：<code>(tty, *os.File)</code>，这个<code>pair</code>在接口变量的连续赋值过程中是不变的，将接口变量<code>r</code>赋给另一个接口变量<code>w</code>：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">var</span> w io<span class="token punctuation">.</span>Writer
+w <span class="token operator">=</span> r<span class="token punctuation">.</span><span class="token punctuation">(</span>io<span class="token punctuation">.</span>Writer<span class="token punctuation">)</span></code></pre>
+
+<p>接口变量<code>w</code>的<code>pair</code>与<code>r</code>的<code>pair</code>相同，都是<code>(tty, *os.File)</code>，即使<code>w</code>是空接口类型，<code>pair</code>也是不变的。</p>
+<p><code>interface</code>及其<code>pair</code>的存在，是G中实现反射的前提，理解了<code>pair</code>，就更容易理解反射。反射就是用来检测存储在接口变量内部值<code>value 类型 concrete type</code> <code>pair</code>对的一种机制。</p>
+<p>所以我们要理解两个基本概念 Type 和 Value，它们也是 Go语言包中 reflect 空间里最重要的两个类型。</p>
+<h1 id="Type和Value"><a href="#Type和Value" class="headerlink" title="Type和Value"></a>Type和Value</h1><p>我们一般用到的包是reflect包。</p>
+<p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Go的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？ 它提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是<code>reflect.ValueOf()</code> 和 <code>reflect.TypeOf()</code>，看看官方的解释</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// ValueOf returns a new Value initialized to the concrete value</span>
+<span class="token comment">// stored in the interface i.  ValueOf(nil) returns the zero </span>
+<span class="token keyword">func</span> <span class="token function">ValueOf</span><span class="token punctuation">(</span>i <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> Value <span class="token punctuation">&#123;</span><span class="token operator">...</span><span class="token punctuation">&#125;</span>
+
+翻译一下：ValueOf用来获取输入参数接口中的数据的值，如果接口为空则返回<span class="token number">0</span>
+
+<span class="token comment">// TypeOf returns the reflection Type that represents the dynamic type of i.</span>
+<span class="token comment">// If i is a nil interface value, TypeOf returns nil.</span>
+<span class="token keyword">func</span> <span class="token function">TypeOf</span><span class="token punctuation">(</span>i <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> Type <span class="token punctuation">&#123;</span><span class="token operator">...</span><span class="token punctuation">&#125;</span>
+
+翻译一下：TypeOf用来动态获取输入参数接口中的值的类型，如果接口为空则返回<span class="token boolean">nil</span></code></pre>
+
+<p><code>reflect.TypeOf()</code>是获取pair中的type，<code>reflect.ValueOf()</code>获取pair中的value。</p>
+<p>首先需要把它转化成reflect对象<code>reflect.Type</code>或者<code>reflect.Value</code>，根据不同的情况调用不同的函数。</p>
+<pre class="language-go" data-language="go"><code class="language-go">t <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">TypeOf</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token comment">//得到类型的元数据,通过t我们能获取类型定义里面的所有元素</span>
+v <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token comment">//得到实际的值，通过v我们获取存储在里面的值，还可以去改变值</span></code></pre>
+
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//反射操作：通过反射，可以获取一个接口类型变量的 类型和数值</span>
+	<span class="token keyword">var</span> x <span class="token builtin">float64</span> <span class="token operator">=</span> <span class="token number">3.4</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"type:"</span><span class="token punctuation">,</span> reflect<span class="token punctuation">.</span><span class="token function">TypeOf</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">)</span>   <span class="token comment">//type: float64</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"value:"</span><span class="token punctuation">,</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//value: 3.4</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"-------------------"</span><span class="token punctuation">)</span>
+	<span class="token comment">//根据反射的值，来获取对应的类型和数值</span>
+	v <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"kind is float64: "</span><span class="token punctuation">,</span> v<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> reflect<span class="token punctuation">.</span>Float64<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"type : "</span><span class="token punctuation">,</span> v<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"value : "</span><span class="token punctuation">,</span> v<span class="token punctuation">.</span><span class="token function">Float</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">type: float64
+value: 3.4
+-------------------
+kind is float64:  true
+type :  float64
+value :  3.4</code></pre>
+
+<p>说明</p>
+<ol>
+<li><code>reflect.TypeOf</code>： 直接给到了我们想要的type类型，如<code>float64</code>、<code>int</code>、各种<code>pointer</code>、<code>struct</code> 等等真实的类型。</li>
+<li><code>reflect.ValueOf</code>：直接给到了我们想要的具体的值，如<code>1.2345</code>这个具体数值，或者类似<code>&amp;&#123;1 &quot;Allen.Wu&quot; 25&#125;</code> 这样的结构体<code>struct</code>的值。</li>
+<li>也就是说明反射可以将<code>接口类型变量</code>转换为<code>反射类型对象</code>，反射类型指的是<code>reflect.Type</code>和<code>reflect.Value</code>这两种。</li>
+</ol>
+<p>Type 和 Value 都包含了大量的方法，其中第一个有用的方法应该是 Kind，这个方法返回该类型的具体信息：<code>Uint</code>、<code>Float64</code> 等。Value 类型还包含了一系列类型方法，比如 <code>Int()</code>，用于返回对应的值。以下是Kind的种类：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">// A Kind represents the specific kind of type that a Type represents.</span>
+<span class="token comment">// The zero Kind is not a valid kind.</span>
+<span class="token keyword">type</span> Kind <span class="token builtin">uint</span>
+
+<span class="token keyword">const</span> <span class="token punctuation">(</span>
+	Invalid Kind <span class="token operator">=</span> <span class="token boolean">iota</span>
+	Bool
+	Int
+	Int8
+	Int16
+	Int32
+	Int64
+	Uint
+	Uint8
+	Uint16
+	Uint32
+	Uint64
+	Uintptr
+	Float32
+	Float64
+	Complex64
+	Complex128
+	Array
+	Chan
+	Func
+	Interface
+	Map
+	Ptr
+	Slice
+	String
+	Struct
+	UnsafePointer
+<span class="token punctuation">)</span></code></pre>
+
+<h1 id="反射的规则"><a href="#反射的规则" class="headerlink" title="反射的规则"></a>反射的规则</h1><p>其实反射的操作步骤非常的简单，就是通过实体对象获取反射对象<code>(Value、Type)</code>，然后操作相应的方法即可。</p>
+<p>反射 API 的分类总结如下：</p>
+<p><strong>1) 从实例到 Value</strong></p>
+<p>通过实例获取 Value 对象，直接使用 reflect.ValueOf() 函数。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">ValueOf</span><span class="token punctuation">(</span>i <span class="token keyword">interface</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> Value</code></pre>
+
+<p><strong>2) 从实例到 Type</strong></p>
+<p>通过实例获取反射对象的 Type，直接使用 reflect.TypeOf() 函数。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">TypeOf</span><span class="token punctuation">(</span>i <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> Type</code></pre>
+
+<p><strong>3) 从 Type 到 Value</strong></p>
+<p>Type 里面只有类型信息，所以直接从一个 Type 接口变量里面是无法获得实例的 Value 的，但可以通过该 Type 构建一个新实例的 Value。reflect 包提供了两种方法，示例如下：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//New 返回的是一个 Value，该 Value 的 type 为 PtrTo(typ)，即 Value 的 Type 是指定 typ 的指针类型</span>
+<span class="token keyword">func</span> <span class="token function">New</span><span class="token punctuation">(</span>typ Type<span class="token punctuation">)</span> Value
+<span class="token comment">//Zero 返回的是一个 typ 类型的零佳，注意返回的 Value 不能寻址，位不可改变</span>
+<span class="token keyword">func</span> <span class="token function">Zero</span><span class="token punctuation">(</span>typ Type<span class="token punctuation">)</span> Value</code></pre>
+
+<p>如果知道一个类型值的底层存放地址，则还有一个函数是可以依据 type 和该地址值恢复出 Value 的。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">NewAt</span><span class="token punctuation">(</span>typ Type<span class="token punctuation">,</span> p unsafe<span class="token punctuation">.</span>Pointer<span class="token punctuation">)</span> Value</code></pre>
+
+<p><strong>4) 从 Value 到 Type</strong></p>
+<p>从反射对象 Value 到 Type 可以直接调用 Value 的方法，因为 Value 内部存放着到 Type 类型的指针。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span> Type</code></pre>
+
+<p><strong>5) 从 Value 到实例</strong></p>
+<p>Value 本身就包含类型和值信息，reflect 提供了丰富的方法来实现从 Value 到实例的转换。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//该方法最通用，用来将 Value 转换为空接口，该空接口内部存放具体类型实例</span>
+<span class="token comment">//可以使用接口类型查询去还原为具体的类型</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Interface</span><span class="token punctuation">(</span><span class="token punctuation">)</span> （i <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span>
+
+<span class="token comment">//Value 自身也提供丰富的方法，直接将 Value 转换为简单类型实例，如果类型不匹配，则直接引起 panic</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> Bool <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Float</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">float64</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Int</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">int64</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Uint</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">uint64</span></code></pre>
+
+<p><strong>6) 从 Value 的指针到值</strong></p>
+<p>从一个指针类型的 Value 获得值类型 Value 有两种方法，示例如下。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//如果 v 类型是接口，则 Elem() 返回接口绑定的实例的 Value，如采 v 类型是指针，则返回指针值的 Value，否则引起 panic</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> <span class="token function">Elem</span><span class="token punctuation">(</span><span class="token punctuation">)</span> Value
+<span class="token comment">//如果 v 是指针，则返回指针值的 Value，否则返回 v 自身，该函数不会引起 panic</span>
+<span class="token keyword">func</span> <span class="token function">Indirect</span><span class="token punctuation">(</span>v Value<span class="token punctuation">)</span> Value</code></pre>
+
+<p><strong>7) Type 指针和值的相互转换</strong></p>
+<p>指针类型 Type 到值类型 Type。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//t 必须是 Array、Chan、Map、Ptr、Slice，否则会引起 panic</span>
+<span class="token comment">//Elem 返回的是其内部元素的 Type</span>
+t<span class="token punctuation">.</span><span class="token function">Elem</span><span class="token punctuation">(</span><span class="token punctuation">)</span> Type</code></pre>
+
+<p>值类型 Type 到指针类型 Type。例如：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//PtrTo 返回的是指向 t 的指针型 Type</span>
+<span class="token keyword">func</span> <span class="token function">PtrTo</span><span class="token punctuation">(</span>t Type<span class="token punctuation">)</span> Type</code></pre>
+
+<p><strong>8) Value 值的可修改性</strong></p>
+<p>Value 值的修改涉及如下两个方法：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token comment">//通过 CanSet 判断是否能修改</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value <span class="token punctuation">)</span> <span class="token function">CanSet</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">bool</span>
+<span class="token comment">//通过 Set 进行修改</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>v Value <span class="token punctuation">)</span> <span class="token function">Set</span><span class="token punctuation">(</span>x Value<span class="token punctuation">)</span></code></pre>
+
+<p>Value 值在什么情况下可以修改？我们知道实例对象传递给接口的是一个完全的值拷贝，如果调用反射的方法 <code>reflect.ValueOf()</code> 传进去的是一个值类型变量， 则获得的 Value 实际上是原对象的一个副本，这个 Value 是无论如何也不能被修改的。</p>
+<p><strong>根据 Go 官方关于反射的博客，反射有三大定律：</strong></p>
+<blockquote>
+<ol>
+<li>Reflection goes from interface value to reflection object.</li>
+<li>Reflection goes from reflection object to interface value.</li>
+<li>To modify a reflection object, the value must be settable.</li>
+</ol>
+</blockquote>
+<p>第一条是最基本的：反射可以从接口值得到反射对象。</p>
+<p> 反射是一种检测存储在 interface中的类型和值机制。这可以通过 <code>TypeOf</code>函数和 <code>ValueOf</code>函数得到。</p>
+<p>第二条实际上和第一条是相反的机制，反射可以从反射对象获得接口值。</p>
+<p> 它将 <code>ValueOf</code>的返回值通过 <code>Interface()</code>函数反向转变成 interface变量。</p>
+<p>前两条就是说 接口型变量和 反射类型对象可以相互转化，反射类型对象实际上就是指的前面说的 <code>reflect.Type</code>和 <code>reflect.Value</code>。</p>
+<p>第三条不太好懂：如果需要操作一个反射变量，则其值必须可以修改。</p>
+<p> 反射变量可设置的本质是它存储了原变量本身，这样对反射变量的操作，就会反映到原变量本身；反之，如果反射变量不能代表原变量，那么操作了反射变量，不会对原变量产生任何影响，这会给使用者带来疑惑。所以第二种情况在语言层面是不被允许的。</p>
+<h1 id="反射的使用"><a href="#反射的使用" class="headerlink" title="反射的使用"></a>反射的使用</h1><p>从<code>relfect.Value</code>中获取接口interface的信息</p>
+<p>当执行<code>reflect.ValueOf(interface)</code>之后，就得到了一个类型为<code>relfect.Value</code>变量，可以通过它本身的Interface()方法获得接口变量的真实内容，然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
+<h2 id="已知原有类型"><a href="#已知原有类型" class="headerlink" title="已知原有类型"></a>已知原有类型</h2><p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下：</p>
+<pre class="language-none"><code class="language-none">realValue :&#x3D; value.Interface().(已知的类型)</code></pre>
+
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">var</span> num <span class="token builtin">float64</span> <span class="token operator">=</span> <span class="token number">1.2345</span>
+
+	pointer <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>num<span class="token punctuation">)</span>
+	value <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>num<span class="token punctuation">)</span>
+
+	<span class="token comment">// 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic</span>
+	<span class="token comment">// Golang 对类型要求非常严格，类型一定要完全符合</span>
+	<span class="token comment">// 如下两个，一个是*float64，一个是float64，如果弄混，则会panic</span>
+	convertPointer <span class="token operator">:=</span> pointer<span class="token punctuation">.</span><span class="token function">Interface</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token builtin">float64</span><span class="token punctuation">)</span>
+	convertValue <span class="token operator">:=</span> value<span class="token punctuation">.</span><span class="token function">Interface</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token builtin">float64</span><span class="token punctuation">)</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>convertPointer<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>convertValue<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">0xc000098000
+1.2345</code></pre>
+
+<p>说明</p>
+<ol>
+<li>转换的时候，如果转换的类型不完全符合，则直接panic，类型要求非常严格！</li>
+<li>转换的时候，要区分是指针还是指</li>
+<li>也就是说反射可以将<code>反射类型对象</code>再重新转换为<code>接口类型变量</code></li>
+</ol>
+<h2 id="未知原有类型"><a href="#未知原有类型" class="headerlink" title="未知原有类型"></a>未知原有类型</h2><p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">type</span> Person <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+	Name <span class="token builtin">string</span>
+	Age  <span class="token builtin">int</span>
+	Sex  <span class="token builtin">string</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>p Person<span class="token punctuation">)</span> <span class="token function">Say</span><span class="token punctuation">(</span>msg <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"hello，"</span><span class="token punctuation">,</span> msg<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>p Person<span class="token punctuation">)</span> <span class="token function">PrintInfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"姓名：%s,年龄：%d，性别：%s\n"</span><span class="token punctuation">,</span> p<span class="token punctuation">.</span>Name<span class="token punctuation">,</span> p<span class="token punctuation">.</span>Age<span class="token punctuation">,</span> p<span class="token punctuation">.</span>Sex<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	p1 <span class="token operator">:=</span> Person<span class="token punctuation">&#123;</span><span class="token string">"王二狗"</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">,</span> <span class="token string">"男"</span><span class="token punctuation">&#125;</span>
+	<span class="token function">DoFiledAndMethod</span><span class="token punctuation">(</span>p1<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">// 通过接口来获取任意参数</span>
+<span class="token keyword">func</span> <span class="token function">DoFiledAndMethod</span><span class="token punctuation">(</span>input <span class="token keyword">interface</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+	getType <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">TypeOf</span><span class="token punctuation">(</span>input<span class="token punctuation">)</span>              <span class="token comment">//先获取input的类型</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"get Type is :"</span><span class="token punctuation">,</span> getType<span class="token punctuation">.</span><span class="token function">Name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment">// Person</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"get Kind is : "</span><span class="token punctuation">,</span> getType<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// struct</span>
+
+	getValue <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>input<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"get all Fields is:"</span><span class="token punctuation">,</span> getValue<span class="token punctuation">)</span> <span class="token comment">//&#123;王二狗 30 男&#125;</span>
+
+	<span class="token comment">// 获取方法字段</span>
+	<span class="token comment">// 1. 先获取interface的reflect.Type，然后通过NumField进行遍历</span>
+	<span class="token comment">// 2. 再通过reflect.Type的Field获取其Field</span>
+	<span class="token comment">// 3. 最后通过Field的Interface()得到对应的value</span>
+	<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> getType<span class="token punctuation">.</span><span class="token function">NumField</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+		field <span class="token operator">:=</span> getType<span class="token punctuation">.</span><span class="token function">Field</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span>
+		value <span class="token operator">:=</span> getValue<span class="token punctuation">.</span><span class="token function">Field</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">Interface</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//获取第i个值</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"字段名称:%s, 字段类型:%s, 字段数值:%v \n"</span><span class="token punctuation">,</span> field<span class="token punctuation">.</span>Name<span class="token punctuation">,</span> field<span class="token punctuation">.</span>Type<span class="token punctuation">,</span> value<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token comment">// 通过反射，操作方法</span>
+	<span class="token comment">// 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历</span>
+	<span class="token comment">// 2. 再公国reflect.Type的Method获取其Method</span>
+	<span class="token keyword">for</span> i <span class="token operator">:=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> getType<span class="token punctuation">.</span><span class="token function">NumMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> i<span class="token operator">++</span> <span class="token punctuation">&#123;</span>
+		method <span class="token operator">:=</span> getType<span class="token punctuation">.</span><span class="token function">Method</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span>
+		fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"方法名称:%s, 方法类型:%v \n"</span><span class="token punctuation">,</span> method<span class="token punctuation">.</span>Name<span class="token punctuation">,</span> method<span class="token punctuation">.</span>Type<span class="token punctuation">)</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">get Type is : Person
+get Kind is :  struct
+get all Fields is: &#123;王二狗 30 男&#125;
+字段名称:Name, 字段类型:string, 字段数值:王二狗 
+字段名称:Age, 字段类型:int, 字段数值:30 
+字段名称:Sex, 字段类型:string, 字段数值:男 
+方法名称:PrintInfo, 方法类型:func(main.Person) 
+方法名称:Say, 方法类型:func(main.Person, string) </code></pre>
+
+<p>说明</p>
+<p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
+<ol>
+<li>先获取interface的<code>reflect.Type</code>，然后通过<code>NumField</code>进行遍历</li>
+<li>再通过<code>reflect.Type</code>的<code>Field</code>获取其<code>Field</code></li>
+<li>最后通过<code>Field</code>的<code>Interface()</code>得到对应的<code>value</code></li>
+</ol>
+<p>通过运行结果可以得知获取未知类型的interface的所属方法（函数）的步骤为：</p>
+<ol>
+<li>先获取<code>interface</code>的<code>reflect.Type</code>，然后通过<code>NumMethod</code>进行遍历</li>
+<li>再分别通过<code>reflect.Type</code>的Method获取对应的真实的方法（函数）</li>
+<li>最后对结果取其Name和Type得知具体的方法名</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+<li><code>struct</code> 或者 <code>struct</code> 的嵌套都是一样的判断处理方式</li>
+</ol>
+<p>如果是<code>struct</code>的话，可以使用<code>Elem()</code>：</p>
+<pre class="language-go" data-language="go"><code class="language-go">tag <span class="token operator">:=</span> t<span class="token punctuation">.</span><span class="token function">Elem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">Field</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Tag <span class="token comment">//获取定义在struct里面的Tag属性</span>
+name <span class="token operator">:=</span> v<span class="token punctuation">.</span><span class="token function">Elem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">Field</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">String</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">//获取存储在第一个字段里面的值</span></code></pre>
+
+<h2 id="通过reflect-Value设置实际变量的值"><a href="#通过reflect-Value设置实际变量的值" class="headerlink" title="通过reflect.Value设置实际变量的值"></a>通过<code>reflect.Value</code>设置实际变量的值</h2><p><code>reflect.Value</code>是通过<code>reflect.ValueOf(X)</code>获得的，只有当X是指针的时候，才可以通过<code>reflec.Value</code>修改实际变量X的值，即：要修改反射类型的对象就一定要保证其值是“addressable”的。</p>
+<p>这里需要一个方法，解释起来就是：Elem返回接口v包含的值或指针v指向的值。如果v的类型不是<code>interface</code>或<code>ptr</code>，它会恐慌。如果v为零，则返回零值。</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+	<span class="token keyword">var</span> num <span class="token builtin">float64</span> <span class="token operator">=</span> <span class="token number">1.2345</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"old value of pointer:"</span><span class="token punctuation">,</span> num<span class="token punctuation">)</span>
+
+	<span class="token comment">// 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值</span>
+	pointer <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>num<span class="token punctuation">)</span>
+	newValue <span class="token operator">:=</span> pointer<span class="token punctuation">.</span><span class="token function">Elem</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"type of pointer:"</span><span class="token punctuation">,</span> newValue<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"settability of pointer:"</span><span class="token punctuation">,</span> newValue<span class="token punctuation">.</span><span class="token function">CanSet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	<span class="token comment">// 重新赋值</span>
+	newValue<span class="token punctuation">.</span><span class="token function">SetFloat</span><span class="token punctuation">(</span><span class="token number">77</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"new value of pointer:"</span><span class="token punctuation">,</span> num<span class="token punctuation">)</span>
+
+	<span class="token comment">////////////////////</span>
+	<span class="token comment">// 如果reflect.ValueOf的参数不是指针，会如何？</span>
+	<span class="token comment">//pointer = reflect.ValueOf(num)</span>
+	<span class="token comment">//newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">old value of pointer: 1.2345
+type of pointer: float64
+settability of pointer: true
+new value of pointer: 77</code></pre>
+
+<p>说明</p>
+<ol>
+<li>需要传入的参数是<code>* float64</code>这个指针，然后可以通过<code>pointer.Elem()</code>去获取所指向的Value，<strong>注意一定要是指针</strong>。</li>
+<li>如果传入的参数不是指针，而是变量，那么<ul>
+<li>通过<code>Elem</code>获取原始值对应的对象则直接panic</li>
+<li>通过<code>CanSet</code>方法查询是否可以设置返回false</li>
+</ul>
+</li>
+<li><code>newValue.CantSet()</code>表示是否可以重新设置其值，如果输出的是true则可修改，否则不能修改，修改完之后再进行打印发现真的已经修改了。</li>
+<li><code>reflect.Value.Elem()</code> 表示获取原始值对应的反射对象，只有原始对象才能修改，当前反射对象是不能修改的</li>
+<li>也就是说如果要修改反射类型对象，其值必须是“addressable”【对应的要传入的是指针，同时要通过Elem方法获取原始值对应的反射对象】</li>
+<li><code>struct</code> 或者 <code>struct</code> 的嵌套都是一样的判断处理方式</li>
+</ol>
+<h2 id="通过reflect-Value来进行方法的调用"><a href="#通过reflect-Value来进行方法的调用" class="headerlink" title="通过reflect.Value来进行方法的调用"></a>通过<code>reflect.Value</code>来进行方法的调用</h2><p>这算是一个高级用法了，前面我们只说到对类型、变量的几种反射的用法，包括如何获取其值、其类型、以及如何重新设置新值。但是在项目应用中，另外一个常用并且属于高级的用法，就是通过reflect来进行方法【函数】的调用。比如我们要做框架工程的时候，需要可以随意扩展方法，或者说用户可以自定义方法，那么我们通过什么手段来扩展让用户能够自定义呢？关键点在于用户的自定义方法是未可知的，因此我们可以通过reflect来搞定。</p>
+<p><strong>通过反射，调用方法。</strong></p>
+<p>先获取结构体对象，然后</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">type</span> Person <span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+	Name <span class="token builtin">string</span>
+	Age <span class="token builtin">int</span>
+	Sex <span class="token builtin">string</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>p Person<span class="token punctuation">)</span><span class="token function">Say</span><span class="token punctuation">(</span>msg <span class="token builtin">string</span><span class="token punctuation">)</span>  <span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"hello，"</span><span class="token punctuation">,</span>msg<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">func</span> <span class="token punctuation">(</span>p Person<span class="token punctuation">)</span><span class="token function">PrintInfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"姓名：%s,年龄：%d，性别：%s\n"</span><span class="token punctuation">,</span>p<span class="token punctuation">.</span>Name<span class="token punctuation">,</span>p<span class="token punctuation">.</span>Age<span class="token punctuation">,</span>p<span class="token punctuation">.</span>Sex<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>p Person<span class="token punctuation">)</span> <span class="token function">Test</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span>j <span class="token builtin">int</span><span class="token punctuation">,</span>s <span class="token builtin">string</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span>j<span class="token punctuation">,</span>s<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">// 如何通过反射来进行方法的调用？</span>
+<span class="token comment">// 本来可以用结构体对象.方法名称()直接调用的，</span>
+<span class="token comment">// 但是如果要通过反射，</span>
+<span class="token comment">// 那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	p2 <span class="token operator">:=</span> Person<span class="token punctuation">&#123;</span><span class="token string">"Ruby"</span><span class="token punctuation">,</span><span class="token number">30</span><span class="token punctuation">,</span><span class="token string">"男"</span><span class="token punctuation">&#125;</span>
+	<span class="token comment">// 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，</span>
+	<span class="token comment">// 得到“反射类型对象”后才能做下一步处理</span>
+	getValue <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>p2<span class="token punctuation">)</span>
+
+	<span class="token comment">// 2.一定要指定参数为正确的方法名</span>
+	<span class="token comment">// 先看看没有参数的调用方法</span>
+
+	methodValue1 <span class="token operator">:=</span> getValue<span class="token punctuation">.</span><span class="token function">MethodByName</span><span class="token punctuation">(</span><span class="token string">"PrintInfo"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Kind : %s, Type : %s\n"</span><span class="token punctuation">,</span>methodValue1<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>methodValue1<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	methodValue1<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span><span class="token boolean">nil</span><span class="token punctuation">)</span> <span class="token comment">//没有参数，直接写nil</span>
+
+	args1 <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span>reflect<span class="token punctuation">.</span>Value<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token comment">//或者创建一个空的切片也可以</span>
+	methodValue1<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span>args1<span class="token punctuation">)</span>
+
+	<span class="token comment">// 有参数的方法调用</span>
+	methodValue2 <span class="token operator">:=</span> getValue<span class="token punctuation">.</span><span class="token function">MethodByName</span><span class="token punctuation">(</span><span class="token string">"Say"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Kind : %s, Type : %s\n"</span><span class="token punctuation">,</span>methodValue2<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>methodValue2<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	args2 <span class="token operator">:=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>reflect<span class="token punctuation">.</span>Value<span class="token punctuation">&#123;</span>reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token string">"反射机制"</span><span class="token punctuation">)</span><span class="token punctuation">&#125;</span>
+	methodValue2<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span>args2<span class="token punctuation">)</span>
+
+	methodValue3 <span class="token operator">:=</span> getValue<span class="token punctuation">.</span><span class="token function">MethodByName</span><span class="token punctuation">(</span><span class="token string">"Test"</span><span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Kind : %s, Type : %s\n"</span><span class="token punctuation">,</span>methodValue3<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>methodValue3<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	args3 <span class="token operator">:=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>reflect<span class="token punctuation">.</span>Value<span class="token punctuation">&#123;</span>reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">,</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token number">200</span><span class="token punctuation">)</span><span class="token punctuation">,</span>reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token string">"Hello"</span><span class="token punctuation">)</span><span class="token punctuation">&#125;</span>
+
+	methodValue3<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span>args3<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p>运行结果：</p>
+<pre class="language-none"><code class="language-none">Kind : func, Type : func()
+姓名：Ruby,年龄：30，性别：男
+姓名：Ruby,年龄：30，性别：男
+Kind : func, Type : func(string)
+hello， 反射机制
+Kind : func, Type : func(int, int, string)
+100 200 Hello</code></pre>
+
+<p><strong>通过反射，调用函数。</strong></p>
+<p>首先我们要先确认一点，函数像普通的变量一样，之前的章节中我们在讲到函数的本质的时候，是可以把函数作为一种变量类型的，而且是引用类型。如果说Fun()是一个函数，那么f1 := Fun也是可以的，那么f1也是一个函数，如果直接调用f1()，那么运行的就是Fun()函数。那么我们就先通过<code>ValueOf()</code>来获取函数的反射对象，可以判断它的Kind，是一个<code>func</code>，那么就可以执行Call()进行函数的调用。</p>
+<p>示例代码：</p>
+<pre class="language-go" data-language="go"><code class="language-go"><span class="token keyword">package</span> main
+
+<span class="token keyword">import</span> <span class="token punctuation">(</span>
+	<span class="token string">"fmt"</span>
+	<span class="token string">"reflect"</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//函数的反射</span>
+	f1 <span class="token operator">:=</span> fun1
+	value <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>f1<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Kind : %s , Type : %s\n"</span><span class="token punctuation">,</span>value<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>value<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//Kind : func , Type : func()</span>
+
+	value2 <span class="token operator">:=</span> reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span>fun2<span class="token punctuation">)</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"Kind : %s , Type : %s\n"</span><span class="token punctuation">,</span>value2<span class="token punctuation">.</span><span class="token function">Kind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>value2<span class="token punctuation">.</span><span class="token function">Type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//Kind : func , Type : func(int, string)</span>
+
+
+	<span class="token comment">//通过反射调用函数</span>
+	value<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span><span class="token boolean">nil</span><span class="token punctuation">)</span>
+
+	value2<span class="token punctuation">.</span><span class="token function">Call</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span>reflect<span class="token punctuation">.</span>Value<span class="token punctuation">&#123;</span>reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">,</span>reflect<span class="token punctuation">.</span><span class="token function">ValueOf</span><span class="token punctuation">(</span><span class="token string">"hello"</span><span class="token punctuation">)</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span>
+
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">fun1</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"我是函数fun1()，无参的。。"</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">func</span> <span class="token function">fun2</span><span class="token punctuation">(</span>i <span class="token builtin">int</span><span class="token punctuation">,</span> s <span class="token builtin">string</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+	fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"我是函数fun2()，有参数。。"</span><span class="token punctuation">,</span>i<span class="token punctuation">,</span>s<span class="token punctuation">)</span>
+<span class="token punctuation">&#125;</span></code></pre>
+
+<p><strong>说明</strong></p>
+<ol>
+<li>要通过反射来调用起对应的方法，必须要先通过<code>reflect.ValueOf(interface)</code>来获取到<code>reflect.Value</code>，得到“反射类型对象”后才能做下一步处理</li>
+<li><code>reflect.Value.MethodByName</code>这个<code>MethodByName</code>，需要指定准确真实的方法名字，如果错误将直接panic，<code>MethodByName</code>返回一个函数值对应的<code>reflect.Value</code>方法的名字。</li>
+<li><code>[]reflect.Value</code>，这个是最终需要调用的方法的参数，可以没有或者一个或者多个，根据实际参数来定。</li>
+<li><code>reflect.Value</code>的 Call 这个方法，这个方法将最终调用真实的方法，参数务必保持一致，如果<code>reflect.Value.Kind</code>不是一个方法，那么将直接panic。</li>
+<li>本来可以用对象访问方法直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是<code>MethodByName</code>，然后通过反射调用<code>methodValue.Call</code></li>
+</ol>
+</div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>TAYNPG</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://taynpg.github.io/2021/05/10/golang-reflect-10/" title="Go反射-10">https://taynpg.github.io/2021/05/10/golang-reflect-10/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"></div><div class="post-nav-item"><a class="post-nav-next" href="/2021/05/09/golang-channel-09/" rel="next" title="Go通道-09"><span class="post-nav-text">Go通道-09</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>要不要和我说些什么？</span><br></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> TAYNPG</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div><div class="live_time"><span>本博客已悄悄的地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2021-05-10T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a></div></body></html>
